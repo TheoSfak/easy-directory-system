@@ -1,0 +1,14 @@
+# Debug files
+test-menu-debug.php
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
