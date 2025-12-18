@@ -23,72 +23,87 @@ $available_taxonomies = get_taxonomies(array('public' => true), 'objects');
     $parent_id = isset($_GET['parent_id']) ? intval($_GET['parent_id']) : 0;
     ?>
     
-    <h1>
-        <?php _e('Easy Categories', 'easy-directory-system'); ?>
-        
-        <!-- Taxonomy Switcher -->
-        <select id="taxonomy-switcher" style="margin-left: 20px; height: 32px; vertical-align: middle; font-size: 13px;">
-            <?php foreach ($available_taxonomies as $tax): ?>
-                <option value="<?php echo esc_attr($tax->name); ?>" <?php selected($taxonomy, $tax->name); ?>>
-                    <?php 
-                    echo esc_html($tax->labels->name);
-                    if ($tax->name === 'category') {
-                        echo ' (Blog Posts)';
-                    } elseif ($tax->name === 'product_cat') {
-                        echo ' (WooCommerce)';
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <div>
+            <h1 style="display: inline-block; margin: 0;">
+                <?php _e('Easy Categories', 'easy-directory-system'); ?>
+                
+                <!-- Taxonomy Switcher -->
+                <select id="taxonomy-switcher" style="margin-left: 20px; height: 32px; vertical-align: middle; font-size: 13px;">
+                    <?php foreach ($available_taxonomies as $tax): ?>
+                        <option value="<?php echo esc_attr($tax->name); ?>" <?php selected($taxonomy, $tax->name); ?>>
+                            <?php 
+                            echo esc_html($tax->labels->name);
+                            if ($tax->name === 'category') {
+                                echo ' (Blog Posts)';
+                            } elseif ($tax->name === 'product_cat') {
+                                echo ' (WooCommerce)';
+                            }
+                            ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                
+                <script>
+                jQuery(document).ready(function($) {
+                    $('#taxonomy-switcher').on('change', function() {
+                        var taxonomy = $(this).val();
+                        var url = '<?php echo admin_url('admin.php?page=easy-categories'); ?>&taxonomy=' + taxonomy;
+                        window.location.href = url;
+                    });
+                });
+                </script>
+            </h1>
+            
+            <?php if ($parent_id > 0): ?>
+                <?php
+                $parent_term = get_term($parent_id, $taxonomy);
+                if ($parent_term && !is_wp_error($parent_term)):
+                    // Build breadcrumb trail
+                    $breadcrumb = array();
+                    $current = $parent_term;
+                    while ($current && !is_wp_error($current)) {
+                        array_unshift($breadcrumb, $current);
+                        if ($current->parent > 0) {
+                            $current = get_term($current->parent, $taxonomy);
+                        } else {
+                            break;
+                        }
                     }
-                    ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-        
-        <script>
-        jQuery(document).ready(function($) {
-            $('#taxonomy-switcher').on('change', function() {
-                var taxonomy = $(this).val();
-                var url = '<?php echo admin_url('admin.php?page=easy-categories'); ?>&taxonomy=' + taxonomy;
-                window.location.href = url;
-            });
-        });
-        </script>
-    </h1>
-    
-    <h1 style="display: none;">
-        <?php _e('Easy Categories', 'easy-directory-system'); ?>
-        <?php if ($parent_id > 0): ?>
-            <?php
-            $parent_term = get_term($parent_id, $taxonomy);
-            if ($parent_term && !is_wp_error($parent_term)):
-                // Build breadcrumb trail
-                $breadcrumb = array();
-                $current = $parent_term;
-                while ($current && !is_wp_error($current)) {
-                    array_unshift($breadcrumb, $current);
-                    if ($current->parent > 0) {
-                        $current = get_term($current->parent, $taxonomy);
-                    } else {
-                        break;
-                    }
-                }
-            ?>
-            <div style="font-size: 14px; font-weight: normal; margin-top: 10px;">
-                <a href="<?php echo admin_url('admin.php?page=easy-categories&taxonomy=' . $taxonomy); ?>">
-                    <span class="dashicons dashicons-admin-home"></span> <?php _e('Home', 'easy-directory-system'); ?>
-                </a>
-                <?php foreach ($breadcrumb as $crumb): ?>
-                    <span class="dashicons dashicons-arrow-right-alt2" style="font-size: 14px;"></span>
-                    <?php if ($crumb->term_id == $parent_id): ?>
-                        <strong><?php echo esc_html($crumb->name); ?></strong>
-                    <?php else: ?>
-                        <a href="<?php echo admin_url('admin.php?page=easy-categories&parent_id=' . $crumb->term_id . '&taxonomy=' . $taxonomy); ?>">
-                            <?php echo esc_html($crumb->name); ?>
-                        </a>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </div>
+                ?>
+                <div style="font-size: 14px; font-weight: normal; margin-top: 10px; color: #666;">
+                    <a href="<?php echo admin_url('admin.php?page=easy-categories&taxonomy=' . $taxonomy); ?>" style="text-decoration: none;">
+                        <span class="dashicons dashicons-admin-home"></span> <?php _e('All Categories', 'easy-directory-system'); ?>
+                    </a>
+                    <?php foreach ($breadcrumb as $crumb): ?>
+                        <span class="dashicons dashicons-arrow-right-alt2" style="font-size: 14px;"></span>
+                        <?php if ($crumb->term_id == $parent_id): ?>
+                            <strong style="color: #2271b1;"><?php echo esc_html($crumb->name); ?></strong>
+                        <?php else: ?>
+                            <a href="<?php echo admin_url('admin.php?page=easy-categories&parent_id=' . $crumb->term_id . '&taxonomy=' . $taxonomy); ?>" style="text-decoration: none;">
+                                <?php echo esc_html($crumb->name); ?>
+                            </a>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
             <?php endif; ?>
+        </div>
+        
+        <?php if ($parent_id > 0): ?>
+            <a href="<?php 
+                $parent_term = get_term($parent_id, $taxonomy);
+                if ($parent_term->parent > 0) {
+                    echo admin_url('admin.php?page=easy-categories&parent_id=' . $parent_term->parent . '&taxonomy=' . $taxonomy);
+                } else {
+                    echo admin_url('admin.php?page=easy-categories&taxonomy=' . $taxonomy);
+                }
+            ?>" class="button button-secondary" style="height: 40px; line-height: 38px; padding: 0 20px;">
+                <span class="dashicons dashicons-arrow-left-alt2" style="margin-top: 8px;"></span>
+                <?php _e('Back', 'easy-directory-system'); ?>
+            </a>
         <?php endif; ?>
-    </h1>
+    </div>
     
     <div class="eds-wrap">
         <!-- Statistics Dashboard -->
@@ -264,6 +279,8 @@ $available_taxonomies = get_taxonomies(array('public' => true), 'objects');
             </table>
         </div>
     </div>
+    
+    <?php EDS_Admin::render_footer(); ?>
 </div>
 
 <input type="hidden" name="taxonomy" value="<?php echo esc_attr($taxonomy); ?>">

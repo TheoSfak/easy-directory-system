@@ -317,6 +317,8 @@ $settings = get_option('eds_settings', array(
             </p>
         </div>
     </form>
+    
+    <?php EDS_Admin::render_footer(); ?>
 </div>
 
 <style>

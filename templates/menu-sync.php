@@ -175,6 +175,8 @@ $taxonomies = get_taxonomies(array('public' => true), 'objects');
         <p><?php _e('No menus created yet.', 'easy-directory-system'); ?></p>
         <?php endif; ?>
     </div>
+    
+    <?php EDS_Admin::render_footer(); ?>
 </div>
 
 <style>

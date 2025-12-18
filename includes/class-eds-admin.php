@@ -86,6 +86,16 @@ class EDS_Admin {
             'easy-categories-settings',
             array($this, 'render_settings_page')
         );
+        
+        // Support & Donate
+        add_submenu_page(
+            'easy-categories',
+            __('Support & Donate', 'easy-directory-system'),
+            '<span style="color:#f18500;">❤️ ' . __('Support', 'easy-directory-system') . '</span>',
+            'manage_options',
+            'easy-categories-donate',
+            array($this, 'render_donate_page')
+        );
     }
     
     /**
@@ -114,5 +124,31 @@ class EDS_Admin {
      */
     public function render_settings_page() {
         require_once EDS_PLUGIN_DIR . 'templates/settings.php';
+    }
+    
+    /**
+     * Render donate page
+     */
+    public function render_donate_page() {
+        require_once EDS_PLUGIN_DIR . 'templates/donate.php';
+    }
+    
+    /**
+     * Render footer with credits and donation
+     */
+    public static function render_footer() {
+        ?>
+        <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-left: 4px solid #2271b1; border-radius: 4px;">
+            <p style="margin: 0; font-size: 14px; color: #666;">
+                <strong><?php _e('Created by Theodore Sfakianakis', 'easy-directory-system'); ?></strong> | 
+                <a href="https://github.com/TheoSfak/easy-directory-system" target="_blank" style="color: #2271b1; text-decoration: none;"><?php _e('GitHub', 'easy-directory-system'); ?></a>
+            </p>
+            <p style="margin: 10px 0 0 0; font-size: 13px; color: #999;">
+                ❤️ <?php _e('If you find this plugin helpful, please consider supporting its development:', 'easy-directory-system'); ?>
+                <strong>PayPal:</strong> <a href="https://www.paypal.com/paypalme/TheodoreSfakianakis" target="_blank" style="color: #2271b1;">paypal.me/TheodoreSfakianakis</a> | 
+                <strong>Revolut:</strong> <a href="https://revolut.me/theodocmx" target="_blank" style="color: #2271b1;">revolut.me/theodocmx</a>
+            </p>
+        </div>
+        <?php
     }
 }
