@@ -8,6 +8,21 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Handle delete action
+if (isset($_GET['action']) && $_GET['action'] === 'delete_menu' && isset($_GET['menu_id'])) {
+    $menu_id = intval($_GET['menu_id']);
+    $nonce = isset($_GET['_wpnonce']) ? $_GET['_wpnonce'] : '';
+    
+    if (wp_verify_nonce($nonce, 'eds_delete_menu_' . $menu_id)) {
+        $result = wp_delete_nav_menu($menu_id);
+        if ($result && !is_wp_error($result)) {
+            echo '<div class="notice notice-success"><p>' . __('Menu deleted successfully!', 'easy-directory-system') . '</p></div>';
+        } else {
+            echo '<div class="notice notice-error"><p>' . __('Failed to delete menu', 'easy-directory-system') . '</p></div>';
+        }
+    }
+}
+
 // Handle sync action
 if (isset($_POST['eds_sync_menu_nonce']) && wp_verify_nonce($_POST['eds_sync_menu_nonce'], 'eds_sync_menu')) {
     $taxonomy = isset($_POST['taxonomy']) ? sanitize_text_field($_POST['taxonomy']) : 'product_cat';
@@ -144,6 +159,12 @@ $taxonomies = get_taxonomies(array('public' => true), 'objects');
                         <a href="<?php echo admin_url('nav-menus.php?action=edit&menu=' . $menu->term_id); ?>" 
                            class="button button-small">
                             <?php _e('Edit', 'easy-directory-system'); ?>
+                        </a>
+                        <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=easy-categories-menu-sync&action=delete_menu&menu_id=' . $menu->term_id), 'eds_delete_menu_' . $menu->term_id); ?>" 
+                           class="button button-small"
+                           onclick="return confirm('<?php echo esc_js(__('Are you sure you want to delete this menu?', 'easy-directory-system')); ?>');"
+                           style="color: #b32d2e;">
+                            <?php _e('Delete', 'easy-directory-system'); ?>
                         </a>
                     </td>
                 </tr>

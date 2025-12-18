@@ -34,49 +34,39 @@
         
         // Enable all categories button
         $('.eds-enable-all').on('click', function() {
-            if (!confirm('Enable all categories on this page?')) {
+            if (!confirm('Enable all categories and subcategories in this taxonomy?')) {
                 return;
             }
             
             const $button = $(this);
             $button.prop('disabled', true).text('Enabling...');
             
-            const toggles = $('.category-toggle:not(:checked)');
-            let completed = 0;
+            // Get taxonomy from URL or default
+            const urlParams = new URLSearchParams(window.location.search);
+            const taxonomy = urlParams.get('taxonomy') || 'category';
             
-            toggles.each(function() {
-                const termId = $(this).data('term-id');
-                const $toggle = $(this);
-                
-                $.ajax({
-                    url: edsAjax.ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'eds_toggle_category',
-                        nonce: edsAjax.nonce,
-                        term_id: termId,
-                        enabled: true
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            $toggle.prop('checked', true);
-                        }
-                    },
-                    complete: function() {
-                        completed++;
-                        if (completed === toggles.length) {
-                            $button.prop('disabled', false).html('<span class="dashicons dashicons-yes"></span> Enable All Categories');
-                            alert('All categories have been enabled!');
-                            location.reload();
-                        }
+            $.ajax({
+                url: edsAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'eds_enable_all_categories',
+                    nonce: edsAjax.nonce,
+                    taxonomy: taxonomy
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('All categories and subcategories have been enabled!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (response.data.message || 'Failed to enable categories'));
+                        $button.prop('disabled', false).html('<span class="dashicons dashicons-yes"></span> Enable All Categories');
                     }
-                });
+                },
+                error: function() {
+                    alert('Failed to enable categories');
+                    $button.prop('disabled', false).html('<span class="dashicons dashicons-yes"></span> Enable All Categories');
+                }
             });
-            
-            if (toggles.length === 0) {
-                $button.prop('disabled', false);
-                alert('All categories are already enabled!');
-            }
         });
         
         // Delete category

@@ -35,6 +35,7 @@ class EDS_Ajax {
         add_action('wp_ajax_eds_sync_woocommerce', array($this, 'sync_woocommerce'));
         add_action('wp_ajax_eds_update_position', array($this, 'update_position'));
         add_action('wp_ajax_eds_get_statistics', array($this, 'get_statistics'));
+        add_action('wp_ajax_eds_enable_all_categories', array($this, 'enable_all_categories'));
     }
     
     /**
@@ -139,5 +140,38 @@ class EDS_Ajax {
         $stats = EDS_Category::get_statistics($taxonomy);
         
         wp_send_json_success($stats);
+    }
+    
+    /**
+     * Enable all categories in taxonomy
+     */
+    public function enable_all_categories() {
+        $this->verify_nonce();
+        
+        $taxonomy = isset($_POST['taxonomy']) ? sanitize_text_field($_POST['taxonomy']) : 'category';
+        
+        // Get all terms in the taxonomy (including all levels of hierarchy)
+        $terms = get_terms(array(
+            'taxonomy' => $taxonomy,
+            'hide_empty' => false,
+            'orderby' => 'none'
+        ));
+        
+        if (is_wp_error($terms)) {
+            wp_send_json_error(array('message' => $terms->get_error_message()));
+        }
+        
+        $count = 0;
+        
+        // Enable all terms regardless of their hierarchy level
+        foreach ($terms as $term) {
+            EDS_Database::save_category_data($term->term_id, array('is_enabled' => 1));
+            $count++;
+        }
+        
+        wp_send_json_success(array(
+            'message' => sprintf(__('Enabled %d categories', 'easy-directory-system'), $count),
+            'count' => $count
+        ));
     }
 }

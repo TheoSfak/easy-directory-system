@@ -3,7 +3,7 @@
  * Plugin Name: Easy Directory System
  * Plugin URI: https://github.com/TheoSfak/easy-directory-system
  * Description: Advanced category management system for WordPress with PrestaShop-style interface. Manage categories with SEO tools, WooCommerce synchronization, and WordPress menu integration.
- * Version: 0.9.0-beta
+ * Version: 0.9.5
  * Author: Theo Sfak
  * Author URI: https://github.com/TheoSfak
  * License: GPL v2 or later
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('EDS_VERSION', '0.9.0-beta');
+define('EDS_VERSION', '0.9.5');
 define('EDS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('EDS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('EDS_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -78,7 +78,6 @@ class Easy_Directory_System {
         require_once EDS_PLUGIN_DIR . 'includes/class-eds-category.php';
         require_once EDS_PLUGIN_DIR . 'includes/class-eds-woocommerce-sync.php';
         require_once EDS_PLUGIN_DIR . 'includes/class-eds-ajax.php';
-        require_once EDS_PLUGIN_DIR . 'includes/class-eds-menu-integration.php';
         require_once EDS_PLUGIN_DIR . 'includes/class-eds-menu-sync.php';
         
         // Initialize components
@@ -86,9 +85,6 @@ class Easy_Directory_System {
             EDS_Admin::get_instance();
             EDS_Ajax::get_instance();
         }
-        
-        // Initialize menu integration
-        add_action('init', array('EDS_Menu_Integration', 'init'), 20);
     }
     
     /**

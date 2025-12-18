@@ -67,17 +67,7 @@ class EDS_Admin {
             array($this, 'render_add_category_page')
         );
         
-        // Menu Integration (old takeover method - keeping for backward compatibility)
-        add_submenu_page(
-            'easy-categories',
-            __('Menu Takeover', 'easy-directory-system'),
-            __('Menu Takeover', 'easy-directory-system'),
-            'manage_options',
-            'easy-categories-menu',
-            array($this, 'render_menu_page')
-        );
-        
-        // Menu Sync (new recommended method)
+        // Menu Sync
         add_submenu_page(
             'easy-categories',
             __('Sync to Menu', 'easy-directory-system'),
@@ -110,31 +100,6 @@ class EDS_Admin {
      */
     public function render_add_category_page() {
         require_once EDS_PLUGIN_DIR . 'templates/category-form.php';
-    }
-    
-    /**
-     * Render menu integration page
-     */
-    public function render_menu_page() {
-        // Handle reset action
-        if (isset($_GET['action']) && $_GET['action'] === 'reset' && isset($_GET['location'])) {
-            $location = sanitize_text_field($_GET['location']);
-            $nonce = isset($_GET['_wpnonce']) ? $_GET['_wpnonce'] : '';
-            
-            if (wp_verify_nonce($nonce, 'eds_reset_menu_' . $location)) {
-                EDS_Menu_Integration::disable_takeover($location);
-                wp_redirect(admin_url('admin.php?page=easy-categories-menu&reset=success'));
-                exit;
-            }
-        }
-        
-        // Show success message
-        if (isset($_GET['reset']) && $_GET['reset'] === 'success') {
-            add_settings_error('eds_menu', 'eds_menu_reset', __('Menu successfully reset to default!', 'easy-directory-system'), 'success');
-        }
-        
-        settings_errors('eds_menu');
-        require_once EDS_PLUGIN_DIR . 'templates/menu-integration.php';
     }
     
     /**
