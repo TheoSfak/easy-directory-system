@@ -64,6 +64,9 @@ class Easy_Directory_System {
         // Load plugin text domain
         add_action('plugins_loaded', array($this, 'load_textdomain'));
         
+        // Check database tables on admin init
+        add_action('admin_init', array($this, 'check_database_tables'));
+        
         // Admin scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         
@@ -139,6 +142,39 @@ class Easy_Directory_System {
                 __('Plugin Activation Error', 'easy-directory-system'),
                 array('back_link' => true)
             );
+        }
+    }
+    
+    /**
+     * Check if database tables exist and create if missing
+     */
+    public function check_database_tables() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'eds_category_data';
+        
+        // Check if table exists
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'");
+        
+        if (!$table_exists) {
+            // Table missing - try to create it
+            try {
+                EDS_Database::create_tables();
+                
+                // Show success notice
+                add_action('admin_notices', function() {
+                    echo '<div class="notice notice-success is-dismissible">';
+                    echo '<p><strong>Easy Directory System:</strong> Database tables created successfully!</p>';
+                    echo '</div>';
+                });
+            } catch (Exception $e) {
+                // Show error notice
+                add_action('admin_notices', function() use ($e) {
+                    echo '<div class="notice notice-error">';
+                    echo '<p><strong>Easy Directory System Error:</strong> Failed to create database tables. ' . esc_html($e->getMessage()) . '</p>';
+                    echo '<p>Please deactivate and reactivate the plugin, or contact support.</p>';
+                    echo '</div>';
+                });
+            }
         }
     }
     
