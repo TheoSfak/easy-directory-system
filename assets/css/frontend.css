@@ -1,88 +1,114 @@
 /**
  * Easy Directory System - Frontend Styles
- * Mega Menu fixes for themes with many subcategories
+ * Mega Menu fixes for Flatsome theme with many subcategories
  */
 
-/* Flatsome Theme - Mega Menu Fixes */
-.nav-dropdown.nav-dropdown-default {
-    max-width: 90vw !important;
-    overflow-x: auto;
+/* Flatsome Theme - Force mega menu container to stay within viewport */
+.header-nav .nav > li > .nav-dropdown,
+.header-nav .nav > li > .nav-dropdown-default,
+ul.nav-dropdown,
+ul.nav-dropdown-default {
+    max-width: 95vw !important;
+    left: auto !important;
+    right: auto !important;
+    overflow: visible !important;
 }
 
-.nav-dropdown.nav-dropdown-default .sub-menu {
-    display: flex;
-    flex-wrap: wrap;
-    max-height: 70vh;
-    overflow-y: auto;
+/* Flatsome sub-menu wrapper - enable scrolling */
+.nav-dropdown .sub-menu,
+.nav-dropdown-default .sub-menu {
+    max-height: 75vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    column-gap: 20px !important;
 }
 
-.nav-dropdown.nav-dropdown-default .sub-menu > li {
-    flex: 0 0 auto;
-    min-width: 200px;
-    max-width: 250px;
+/* Flatsome sub-menu items - multi-column layout */
+.nav-dropdown .sub-menu > li,
+.nav-dropdown-default .sub-menu > li {
+    flex: 0 0 auto !important;
+    min-width: 200px !important;
+    max-width: 250px !important;
+    break-inside: avoid !important;
 }
 
-/* Multi-column layout for many items */
-.nav-dropdown.nav-dropdown-default .sub-menu.many-items {
-    column-count: auto;
-    column-width: 220px;
-    column-gap: 20px;
+/* Nested submenu items */
+.nav-dropdown .sub-menu li .sub-menu,
+.nav-dropdown-default .sub-menu li .sub-menu {
+    display: block !important;
+    position: static !important;
+    box-shadow: none !important;
+    padding-left: 15px !important;
+    max-height: none !important;
+    overflow: visible !important;
 }
 
-.nav-dropdown.nav-dropdown-default .sub-menu.many-items > li {
-    break-inside: avoid;
-    page-break-inside: avoid;
-    margin-bottom: 10px;
+.nav-dropdown .sub-menu li .sub-menu li,
+.nav-dropdown-default .sub-menu li .sub-menu li {
+    min-width: auto !important;
+    max-width: none !important;
+    width: 100% !important;
 }
 
-/* Scrollbar styling */
-.nav-dropdown.nav-dropdown-default .sub-menu::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+/* Custom scrollbar for Flatsome dropdown */
+.nav-dropdown .sub-menu::-webkit-scrollbar,
+.nav-dropdown-default .sub-menu::-webkit-scrollbar {
+    width: 8px !important;
 }
 
-.nav-dropdown.nav-dropdown-default .sub-menu::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
+.nav-dropdown .sub-menu::-webkit-scrollbar-track,
+.nav-dropdown-default .sub-menu::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+    border-radius: 4px !important;
 }
 
-.nav-dropdown.nav-dropdown-default .sub-menu::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
+.nav-dropdown .sub-menu::-webkit-scrollbar-thumb,
+.nav-dropdown-default .sub-menu::-webkit-scrollbar-thumb {
+    background: #888 !important;
+    border-radius: 4px !important;
 }
 
-.nav-dropdown.nav-dropdown-default .sub-menu::-webkit-scrollbar-thumb:hover {
-    background: #555;
+.nav-dropdown .sub-menu::-webkit-scrollbar-thumb:hover,
+.nav-dropdown-default .sub-menu::-webkit-scrollbar-thumb:hover {
+    background: #555 !important;
 }
 
-/* Alternative: Grid layout for mega menu */
-@media (min-width: 768px) {
-    .nav-dropdown.nav-dropdown-default.mega-menu .sub-menu {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 15px;
-        max-width: 1200px;
-        padding: 20px;
+/* Grid layout alternative for desktop */
+@media (min-width: 850px) {
+    .nav-dropdown .sub-menu,
+    .nav-dropdown-default .sub-menu {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+        gap: 15px 20px !important;
+        padding: 20px !important;
+        max-width: 1400px !important;
     }
     
-    .nav-dropdown.nav-dropdown-default.mega-menu .sub-menu > li {
-        margin: 0;
+    .nav-dropdown .sub-menu > li,
+    .nav-dropdown-default .sub-menu > li {
+        margin: 0 !important;
     }
 }
 
 /* Mobile responsive */
-@media (max-width: 767px) {
-    .nav-dropdown.nav-dropdown-default {
-        max-width: 95vw !important;
+@media (max-width: 849px) {
+    .nav-dropdown,
+    .nav-dropdown-default {
+        max-width: 100vw !important;
     }
     
-    .nav-dropdown.nav-dropdown-default .sub-menu {
-        flex-direction: column;
-        max-height: 60vh;
+    .nav-dropdown .sub-menu,
+    .nav-dropdown-default .sub-menu {
+        flex-direction: column !important;
+        max-height: 70vh !important;
     }
     
-    .nav-dropdown.nav-dropdown-default .sub-menu > li {
-        width: 100%;
-        max-width: none;
+    .nav-dropdown .sub-menu > li,
+    .nav-dropdown-default .sub-menu > li {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: auto !important;
     }
 }
