@@ -30,6 +30,19 @@ Features:
 
 == Installation ==
 
+**From GitHub Releases (Recommended):**
+1. Download the latest release ZIP from https://github.com/TheoSfak/easy-directory-system/releases
+2. Go to WordPress Admin → Plugins → Add New → Upload Plugin
+3. Choose the downloaded ZIP file and click Install Now
+4. Activate the plugin
+
+**From GitHub Source:**
+1. Download ZIP from https://github.com/TheoSfak/easy-directory-system
+2. Extract and rename folder from "easy-directory-system-main" to "easy-directory-system"
+3. Upload to /wp-content/plugins/
+4. Activate in WordPress Admin
+
+**Manual Installation:**
 1. Upload the plugin files to `/wp-content/plugins/easy-directory-system/`
 2. Activate the plugin through the 'Plugins' screen in WordPress
 3. Navigate to 'Easy Categories' in the WordPress admin menu
