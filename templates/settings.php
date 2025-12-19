@@ -27,8 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eds_settings_nonce'])
     $settings = array(
         'default_redirection' => sanitize_text_field($_POST['default_redirection']),
         'allowed_url_chars' => sanitize_text_field($_POST['allowed_url_chars']),
-        'sync_on_save' => isset($_POST['sync_on_save']) ? 1 : 0,
-        'enable_multilingual' => isset($_POST['enable_multilingual']) ? 1 : 0,
         'seo_enabled' => isset($_POST['seo_enabled']) ? 1 : 0,
         'auto_generate_meta' => isset($_POST['auto_generate_meta']) ? 1 : 0,
         'default_group_access' => isset($_POST['default_group_access']) ? $_POST['default_group_access'] : array('visitor', 'guest', 'customer')
@@ -43,8 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eds_settings_nonce'])
 $settings = get_option('eds_settings', array(
     'default_redirection' => '301',
     'allowed_url_chars' => 'letters_numbers_underscores_hyphens',
-    'sync_on_save' => false,
-    'enable_multilingual' => true,
     'seo_enabled' => true,
     'auto_generate_meta' => false,
     'default_group_access' => array('visitor', 'guest', 'customer')
@@ -93,72 +89,42 @@ $settings = get_option('eds_settings', array(
                             <label><?php _e('Allowed URL Characters', 'easy-directory-system'); ?></label>
                         </th>
                         <td>
-                            <select name="allowed_url_chars" style="min-width: 300px;">
-                                <option value="letters_numbers_underscores_hyphens" 
-                                        <?php selected($settings['allowed_url_chars'], 'letters_numbers_underscores_hyphens'); ?>>
+                            <fieldset>
+                                <label style="display: block; margin-bottom: 8px;">
+                                    <input type="radio" name="allowed_url_chars" value="letters_numbers_underscores_hyphens" 
+                                           <?php checked($settings['allowed_url_chars'], 'letters_numbers_underscores_hyphens'); ?>>
                                     <?php _e('Letters, Numbers, Underscores, Hyphens', 'easy-directory-system'); ?>
-                                </option>
-                                <option value="letters_numbers_hyphens" 
-                                        <?php selected($settings['allowed_url_chars'], 'letters_numbers_hyphens'); ?>>
+                                </label>
+                                <label style="display: block; margin-bottom: 8px;">
+                                    <input type="radio" name="allowed_url_chars" value="letters_numbers_underscores_hyphens_greek" 
+                                           <?php checked($settings['allowed_url_chars'], 'letters_numbers_underscores_hyphens_greek'); ?>>
+                                    <?php _e('Letters, Numbers, Underscores, Hyphens, Greek', 'easy-directory-system'); ?>
+                                </label>
+                                <label style="display: block; margin-bottom: 8px;">
+                                    <input type="radio" name="allowed_url_chars" value="letters_numbers_underscores_hyphens_greeklish" 
+                                           <?php checked($settings['allowed_url_chars'], 'letters_numbers_underscores_hyphens_greeklish'); ?>>
+                                    <strong><?php _e('Auto-convert Greek to Greeklish (Latin)', 'easy-directory-system'); ?></strong>
+                                </label>
+                                <label style="display: block; margin-bottom: 8px;">
+                                    <input type="radio" name="allowed_url_chars" value="letters_numbers_hyphens" 
+                                           <?php checked($settings['allowed_url_chars'], 'letters_numbers_hyphens'); ?>>
                                     <?php _e('Letters, Numbers, Hyphens', 'easy-directory-system'); ?>
-                                </option>
-                                <option value="letters_numbers" 
-                                        <?php selected($settings['allowed_url_chars'], 'letters_numbers'); ?>>
+                                </label>
+                                <label style="display: block; margin-bottom: 8px;">
+                                    <input type="radio" name="allowed_url_chars" value="letters_numbers" 
+                                           <?php checked($settings['allowed_url_chars'], 'letters_numbers'); ?>>
                                     <?php _e('Letters, Numbers', 'easy-directory-system'); ?>
-                                </option>
-                            </select>
+                                </label>
+                            </fieldset>
                             <p class="description">
                                 <?php _e('Define which characters are allowed in category friendly URLs.', 'easy-directory-system'); ?>
-                            </p>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <th scope="row">
-                            <label><?php _e('Enable Multilingual Support', 'easy-directory-system'); ?></label>
-                        </th>
-                        <td>
-                            <label>
-                                <input type="checkbox" 
-                                       name="enable_multilingual" 
-                                       value="1" 
-                                       <?php checked($settings['enable_multilingual'], 1); ?>>
-                                <?php _e('Enable language tabs for category content', 'easy-directory-system'); ?>
-                            </label>
-                            <p class="description">
-                                <?php _e('Allow translating category names, descriptions, and meta information.', 'easy-directory-system'); ?>
                             </p>
                         </td>
                     </tr>
                 </table>
             </div>
             
-            <!-- WooCommerce Settings -->
-            <?php if (class_exists('WooCommerce')): ?>
-            <div class="eds-form-section">
-                <h2><?php _e('WooCommerce Integration', 'easy-directory-system'); ?></h2>
-                
-                <table class="form-table">
-                    <tr>
-                        <th scope="row">
-                            <label><?php _e('Auto-sync on Save', 'easy-directory-system'); ?></label>
-                        </th>
-                        <td>
-                            <label>
-                                <input type="checkbox" 
-                                       name="sync_on_save" 
-                                       value="1" 
-                                       <?php checked($settings['sync_on_save'], 1); ?>>
-                                <?php _e('Automatically sync with WooCommerce when saving categories', 'easy-directory-system'); ?>
-                            </label>
-                            <p class="description">
-                                <?php _e('When enabled, changes will be automatically synced to WooCommerce product categories.', 'easy-directory-system'); ?>
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <?php endif; ?>
+
             
             <!-- SEO Settings -->
             <div class="eds-form-section">

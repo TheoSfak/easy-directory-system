@@ -7,6 +7,79 @@
     
     $(document).ready(function() {
         
+        // Greek to Greeklish conversion
+        function greekToGreeklish(text) {
+            const greekMap = {
+                'α':'a','ά':'a','Α':'a','Ά':'a','β':'b','Β':'b','γ':'g','Γ':'g','δ':'d','Δ':'d',
+                'ε':'e','έ':'e','Ε':'e','Έ':'e','ζ':'z','Ζ':'z','η':'i','ή':'i','Η':'i','Ή':'i',
+                'θ':'th','Θ':'th','ι':'i','ί':'i','ϊ':'i','ΐ':'i','Ι':'i','Ί':'i','Ϊ':'i',
+                'κ':'k','Κ':'k','λ':'l','Λ':'l','μ':'m','Μ':'m','ν':'n','Ν':'n','ξ':'ks','Ξ':'ks',
+                'ο':'o','ό':'o','Ο':'o','Ό':'o','π':'p','Π':'p','ρ':'r','Ρ':'r','σ':'s','ς':'s','Σ':'s',
+                'τ':'t','Τ':'t','υ':'y','ύ':'y','ϋ':'y','ΰ':'y','Υ':'y','Ύ':'y','Ϋ':'y',
+                'φ':'f','Φ':'f','χ':'ch','Χ':'ch','ψ':'ps','Ψ':'ps','ω':'o','ώ':'o','Ω':'o','Ώ':'o'
+            };
+            return text.split('').map(char => greekMap[char] || char).join('');
+        }
+        
+        // Function to validate slug
+        function validateSlug(input) {
+            let slug = input.value;
+            let allowedChars = edsAjax.settings ? edsAjax.settings.allowed_url_chars : 'letters_numbers_underscores_hyphens';
+            let pattern;
+            
+            // Convert to lowercase first
+            slug = slug.toLowerCase();
+            
+            // Define regex pattern based on setting
+            switch(allowedChars) {
+                case 'letters_numbers':
+                    pattern = /[^a-z0-9]/gi;
+                    break;
+                case 'letters_numbers_hyphens':
+                    pattern = /[^a-z0-9\-]/gi;
+                    break;
+                case 'letters_numbers_underscores_hyphens_greek':
+                    // Allow Greek characters - case insensitive
+                    pattern = /[^a-z0-9_\-\u0370-\u03ff\u1f00-\u1fff]/gi;
+                    break;
+                case 'letters_numbers_underscores_hyphens_greeklish':
+                    // Convert Greek to Greeklish first, then allow only standard chars
+                    slug = greekToGreeklish(slug);
+                    pattern = /[^a-z0-9_\-]/gi;
+                    break;
+                case 'letters_numbers_underscores_hyphens':
+                default:
+                    pattern = /[^a-z0-9_\-]/gi;
+                    break;
+            }
+            
+            // Remove invalid characters
+            let cleaned = slug.replace(pattern, '');
+            
+            if (cleaned !== slug) {
+                input.value = cleaned;
+            }
+        }
+        
+        // Watch slug field for changes using polling (handles IME input for Greek characters)
+        const slugInput = document.getElementById('slug');
+        if (slugInput) {
+            let lastValue = slugInput.value;
+            
+            // Poll for changes every 100ms
+            setInterval(function() {
+                if (slugInput.value !== lastValue) {
+                    lastValue = slugInput.value;
+                    validateSlug(slugInput);
+                }
+            }, 100);
+            
+            // Also handle input event
+            slugInput.addEventListener('input', function() {
+                validateSlug(this);
+            });
+        }
+        
         // Toggle category enabled/disabled
         $('.eds-toggle input').on('change', function() {
             const termId = $(this).data('term-id');
@@ -55,7 +128,7 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        alert('All categories and subcategories have been enabled!');
+                        alert(response.data.message || 'All categories and subcategories have been enabled!');
                         location.reload();
                     } else {
                         alert('Error: ' + (response.data.message || 'Failed to enable categories'));
@@ -108,10 +181,84 @@
         });
         
         $('.eds-sync-from-woo').on('click', function() {
-            syncWooCommerce('from_woo');
+            const button = $('.eds-sync-from-woo');
+            const syncMode = edsAjax.settings ? edsAjax.settings.sync_mode : 'add_only';
+            
+            // Get sync mode description
+            let syncModeText = '';
+            switch(syncMode) {
+                case 'add_only':
+                    syncModeText = 'Add Only - Only new categories will be added, existing categories will NOT be removed';
+                    break;
+                case 'full_sync_confirm':
+                    syncModeText = 'Full Sync - New categories will be added AND orphaned categories will be removed (with confirmation)';
+                    break;
+                case 'full_sync_auto':
+                    syncModeText = 'Full Sync - New categories will be added AND orphaned categories will be removed (automatic)';
+                    break;
+            }
+            
+            // If mode is add_only, show info message and sync
+            if (syncMode === 'add_only') {
+                if (confirm('Sync Mode: ' + syncModeText + '\n\nDo you want to proceed?')) {
+                    syncWooCommerce('from_woo', false);
+                }
+                return;
+            }
+            
+            // If mode is full_sync_auto, show info and sync automatically
+            if (syncMode === 'full_sync_auto') {
+                if (confirm('Sync Mode: ' + syncModeText + '\n\nWARNING: This will automatically remove categories that no longer exist in WooCommerce!\n\nDo you want to proceed?')) {
+                    syncWooCommerce('from_woo', true);
+                }
+                return;
+            }
+            
+            // For full_sync_confirm, check for orphaned categories first
+            button.prop('disabled', true).text('Checking...');
+            
+            $.ajax({
+                url: edsAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'eds_get_orphaned_categories',
+                    nonce: edsAjax.nonce
+                },
+                success: function(response) {
+                    if (response.success && response.data.orphaned.length > 0) {
+                        // Show confirmation dialog with list of categories to be removed
+                        let categoryList = response.data.orphaned.map(cat => '• ' + cat.name).join('\n');
+                        let message = 'Sync Mode: ' + syncModeText + '\n\n' +
+                                     'The following categories exist in Easy Directory but NOT in WooCommerce and will be REMOVED:\n\n' + 
+                                     categoryList + 
+                                     '\n\nDo you want to proceed?';
+                        
+                        if (confirm(message)) {
+                            syncWooCommerce('from_woo', true);
+                        } else {
+                            button.prop('disabled', false).text('Sync from WooCommerce');
+                        }
+                    } else {
+                        // No orphaned categories, but still inform about sync mode
+                        let message = 'Sync Mode: ' + syncModeText + '\n\n' +
+                                     'No orphaned categories found. All categories will be synced.\n\n' +
+                                     'Do you want to proceed?';
+                        
+                        if (confirm(message)) {
+                            syncWooCommerce('from_woo', false);
+                        } else {
+                            button.prop('disabled', false).text('Sync from WooCommerce');
+                        }
+                    }
+                },
+                error: function() {
+                    button.prop('disabled', false).text('Sync from WooCommerce');
+                    alert('Failed to check for orphaned categories');
+                }
+            });
         });
         
-        function syncWooCommerce(direction) {
+        function syncWooCommerce(direction, removeOrphaned) {
             const button = direction === 'to_woo' ? $('.eds-sync-to-woo') : $('.eds-sync-from-woo');
             button.prop('disabled', true).text('Syncing...');
             
@@ -121,7 +268,8 @@
                 data: {
                     action: 'eds_sync_woocommerce',
                     nonce: edsAjax.nonce,
-                    direction: direction
+                    direction: direction,
+                    remove_orphaned: removeOrphaned || false
                 },
                 success: function(response) {
                     if (response.success) {

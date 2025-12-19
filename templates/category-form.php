@@ -10,9 +10,19 @@ if (!defined('ABSPATH')) {
 
 // Get term ID if editing
 $term_id = isset($_GET['term_id']) ? intval($_GET['term_id']) : 0;
-$taxonomy = isset($_GET['taxonomy']) ? sanitize_text_field($_GET['taxonomy']) : 'category';
+$default_taxonomy = class_exists('WooCommerce') ? 'product_cat' : 'category';
+$taxonomy = isset($_GET['taxonomy']) ? sanitize_text_field($_GET['taxonomy']) : $default_taxonomy;
 $is_edit = $term_id > 0;
 $preset_parent_id = isset($_GET['parent_id']) ? intval($_GET['parent_id']) : 0;
+
+// Get settings
+$settings = get_option('eds_settings', array(
+    'default_redirection' => '301',
+    'allowed_url_chars' => 'letters_numbers_underscores_hyphens',
+    'seo_enabled' => true,
+    'auto_generate_meta' => false,
+    'default_group_access' => array('visitor', 'guest', 'customer')
+));
 
 // Get category data if editing
 $category = null;
@@ -32,7 +42,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eds_category_nonce'])
     }
     
     $name = sanitize_text_field($_POST['name']);
-    $slug = sanitize_title($_POST['slug']);
+    
+    // Greek to Greeklish conversion function
+    function greek_to_greeklish($text) {
+        $greek = array('α','ά','Α','Ά','β','Β','γ','Γ','δ','Δ','ε','έ','Ε','Έ','ζ','Ζ','η','ή','Η','Ή','θ','Θ','ι','ί','ϊ','ΐ','Ι','Ί','Ϊ','κ','Κ','λ','Λ','μ','Μ','ν','Ν','ξ','Ξ','ο','ό','Ο','Ό','π','Π','ρ','Ρ','σ','ς','Σ','τ','Τ','υ','ύ','ϋ','ΰ','Υ','Ύ','Ϋ','φ','Φ','χ','Χ','ψ','Ψ','ω','ώ','Ω','Ώ');
+        $latin = array('a','a','A','A','b','B','g','G','d','D','e','e','E','E','z','Z','i','i','I','I','th','Th','i','i','i','i','I','I','I','k','K','l','L','m','M','n','N','ks','Ks','o','o','O','O','p','P','r','R','s','s','S','t','T','y','y','y','y','Y','Y','Y','f','F','ch','Ch','ps','Ps','o','o','O','O');
+        return str_replace($greek, $latin, $text);
+    }
+    
+    // Custom slug sanitization based on allowed_url_chars setting
+    $slug = $_POST['slug'];
+    $allowed_chars = $settings['allowed_url_chars'];
+    
+    switch($allowed_chars) {
+        case 'letters_numbers':
+            $slug = preg_replace('/[^a-z0-9]/i', '', strtolower($slug));
+            break;
+        case 'letters_numbers_hyphens':
+            $slug = preg_replace('/[^a-z0-9\-]/i', '', strtolower($slug));
+            break;
+        case 'letters_numbers_underscores_hyphens_greek':
+            // Allow Greek characters (Unicode ranges)
+            $slug = preg_replace('/[^a-z0-9_\-\x{0370}-\x{03ff}\x{1f00}-\x{1fff}]/ui', '', mb_strtolower($slug, 'UTF-8'));
+            break;
+        case 'letters_numbers_underscores_hyphens_greeklish':
+            // Convert Greek to Greeklish first
+            $slug = greek_to_greeklish($slug);
+            $slug = preg_replace('/[^a-z0-9_\-]/i', '', strtolower($slug));
+            break;
+        case 'letters_numbers_underscores_hyphens':
+        default:
+            $slug = preg_replace('/[^a-z0-9_\-]/i', '', strtolower($slug));
+            break;
+    }
+    
+    // Ensure slug is not empty
+    if (empty($slug)) {
+        $slug = sanitize_title($name);
+    }
+    
     $description = wp_kses_post($_POST['description']);
     $parent = intval($_POST['parent']);
     
@@ -53,6 +101,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eds_category_nonce'])
     } else {
         $saved_term_id = is_array($result) ? $result['term_id'] : $term_id;
         
+        // Auto-generate meta information if enabled and fields are empty
+        $meta_title = sanitize_text_field($_POST['meta_title']);
+        $meta_description = sanitize_textarea_field($_POST['meta_description']);
+        
+        if ($settings['auto_generate_meta']) {
+            if (empty($meta_title)) {
+                $meta_title = $name;
+            }
+            if (empty($meta_description)) {
+                $meta_description = wp_trim_words(strip_tags($description), 20);
+            }
+        }
+        
         // Save extended data
         $extended_data_args = array(
             'taxonomy' => $taxonomy,
@@ -64,8 +125,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eds_category_nonce'])
             'redirection_target' => isset($_POST['redirection_target']) ? intval($_POST['redirection_target']) : null,
             'group_access' => isset($_POST['group_access']) ? json_encode($_POST['group_access']) : json_encode(array()),
             'meta_data' => json_encode(array(
-                'meta_title' => sanitize_text_field($_POST['meta_title']),
-                'meta_description' => sanitize_textarea_field($_POST['meta_description']),
+                'meta_title' => $meta_title,
+                'meta_description' => $meta_description,
                 'additional_description' => wp_kses_post($_POST['additional_description'])
             ))
         );
@@ -145,7 +206,28 @@ if ($extended_data && $extended_data->group_access) {
                                    name="slug" 
                                    value="<?php echo $is_edit ? esc_attr($category->slug) : ''; ?>" 
                                    required>
-                            <p class="description"><?php _e('Allowed characters: letters, numbers, underscores, hyphens', 'easy-directory-system'); ?></p>
+                            <p class="description">
+                                <?php
+                                $allowed_chars = isset($settings['allowed_url_chars']) ? $settings['allowed_url_chars'] : 'letters_numbers_underscores_hyphens';
+                                switch ($allowed_chars) {
+                                    case 'letters_numbers':
+                                        _e('Allowed characters: letters, numbers', 'easy-directory-system');
+                                        break;
+                                    case 'letters_numbers_hyphens':
+                                        _e('Allowed characters: letters, numbers, hyphens', 'easy-directory-system');
+                                        break;
+                                    case 'letters_numbers_underscores_hyphens_greek':
+                                        _e('Allowed characters: letters, numbers, underscores, hyphens, Greek characters', 'easy-directory-system');
+                                        break;
+                                    case 'letters_numbers_underscores_hyphens_greeklish':
+                                        _e('Greek characters will be automatically converted to Latin (Greeklish)', 'easy-directory-system');
+                                        break;
+                                    default:
+                                        _e('Allowed characters: letters, numbers, underscores, hyphens', 'easy-directory-system');
+                                        break;
+                                }
+                                ?>
+                            </p>
                         </div>
                     </div>
                     
@@ -181,6 +263,7 @@ if ($extended_data && $extended_data->group_access) {
                     </div>
                     
                     <!-- SEO Section with Preview -->
+                    <?php if ($settings['seo_enabled']): ?>
                     <div class="eds-form-section">
                         <h2><?php _e('SEO', 'easy-directory-system'); ?></h2>
                         
@@ -210,15 +293,9 @@ if ($extended_data && $extended_data->group_access) {
                             <div class="eds-seo-preview-url">https://example.com/category/<?php echo $is_edit ? $category->slug : 'category-slug'; ?></div>
                             <div class="eds-seo-preview-title"><?php echo $meta_title ?: ($is_edit ? $category->name : 'Category Title'); ?></div>
                             <div class="eds-seo-preview-desc"><?php echo $meta_desc ?: 'Category description will appear here...'; ?></div>
-                        </div
-                                <input type="checkbox" 
-                                       name="is_enabled" 
-                                       value="1" 
-                                       <?php checked($extended_data ? $extended_data->is_enabled : 1, 1); ?>>
-                                <?php _e('Enabled', 'easy-directory-system'); ?>
-                            </label>
                         </div>
                     </div>
+                    <?php endif; ?>
                     
                     <!-- Parent Category -->
                     <div class="eds-form-section">
@@ -310,16 +387,17 @@ if ($extended_data && $extended_data->group_access) {
                         <h2><?php _e('Redirection when not displayed', 'easy-directory-system'); ?></h2>
                         <div class="eds-form-row">
                             <select name="redirection_type" style="width: 100%;">
-                                <option value="301" <?php selected($extended_data ? $extended_data->redirection_type : '301', '301'); ?>>
+                                <?php $default_redir = $extended_data ? $extended_data->redirection_type : $settings['default_redirection']; ?>
+                                <option value="301" <?php selected($default_redir, '301'); ?>>
                                     301 - <?php _e('Permanent redirection', 'easy-directory-system'); ?>
                                 </option>
-                                <option value="302" <?php selected($extended_data ? $extended_data->redirection_type : '301', '302'); ?>>
+                                <option value="302" <?php selected($default_redir, '302'); ?>>
                                     302 - <?php _e('Temporary redirection', 'easy-directory-system'); ?>
                                 </option>
-                                <option value="404" <?php selected($extended_data ? $extended_data->redirection_type : '301', '404'); ?>>
+                                <option value="404" <?php selected($default_redir, '404'); ?>>
                                     404 - <?php _e('Not Found', 'easy-directory-system'); ?>
                                 </option>
-                                <option value="410" <?php selected($extended_data ? $extended_data->redirection_type : '301', '410'); ?>>
+                                <option value="410" <?php selected($default_redir, '410'); ?>>
                                     410 - <?php _e('Gone', 'easy-directory-system'); ?>
                                 </option>
                             </select>
@@ -342,12 +420,16 @@ if ($extended_data && $extended_data->group_access) {
                     <!-- Group Access -->
                     <div class="eds-form-section">
                         <h2><?php _e('Group Access', 'easy-directory-system'); ?> <span class="required">*</span></h2>
+                        <?php 
+                        // Use default group access from settings if no custom access set
+                        $effective_group_access = !empty($group_access) ? $group_access : $settings['default_group_access'];
+                        ?>
                         <div class="eds-form-row">
                             <label>
                                 <input type="checkbox" 
                                        name="group_access[]" 
                                        value="visitor" 
-                                       <?php checked(in_array('visitor', $group_access) || empty($group_access), true); ?>>
+                                       <?php checked(in_array('visitor', $effective_group_access), true); ?>>
                                 <?php _e('Visitor', 'easy-directory-system'); ?>
                             </label>
                         </div>
@@ -356,7 +438,7 @@ if ($extended_data && $extended_data->group_access) {
                                 <input type="checkbox" 
                                        name="group_access[]" 
                                        value="guest" 
-                                       <?php checked(in_array('guest', $group_access) || empty($group_access), true); ?>>
+                                       <?php checked(in_array('guest', $effective_group_access), true); ?>>
                                 <?php _e('Guest', 'easy-directory-system'); ?>
                             </label>
                         </div>
@@ -365,7 +447,7 @@ if ($extended_data && $extended_data->group_access) {
                                 <input type="checkbox" 
                                        name="group_access[]" 
                                        value="customer" 
-                                       <?php checked(in_array('customer', $group_access) || empty($group_access), true); ?>>
+                                       <?php checked(in_array('customer', $effective_group_access), true); ?>>
                                 <?php _e('Customer', 'easy-directory-system'); ?>
                             </label>
                         </div>
@@ -440,12 +522,46 @@ if ($extended_data && $extended_data->group_access) {
 
 <script>
 jQuery(document).ready(function($) {
-    // Auto-generate slug from name
+    // Greek to Greeklish conversion
+    function greekToGreeklish(text) {
+        const greekMap = {
+            'α':'a','ά':'a','Α':'A','Ά':'A','β':'b','Β':'B','γ':'g','Γ':'G','δ':'d','Δ':'D',
+            'ε':'e','έ':'e','Ε':'E','Έ':'E','ζ':'z','Ζ':'Z','η':'i','ή':'i','Η':'I','Ή':'I',
+            'θ':'th','Θ':'Th','ι':'i','ί':'i','ϊ':'i','ΐ':'i','Ι':'I','Ί':'I','Ϊ':'I',
+            'κ':'k','Κ':'K','λ':'l','Λ':'L','μ':'m','Μ':'M','ν':'n','Ν':'N','ξ':'ks','Ξ':'Ks',
+            'ο':'o','ό':'o','Ο':'O','Ό':'O','π':'p','Π':'P','ρ':'r','Ρ':'R','σ':'s','ς':'s','Σ':'S',
+            'τ':'t','Τ':'T','υ':'y','ύ':'y','ϋ':'y','ΰ':'y','Υ':'Y','Ύ':'Y','Ϋ':'Y',
+            'φ':'f','Φ':'F','χ':'ch','Χ':'Ch','ψ':'ps','Ψ':'Ps','ω':'o','ώ':'o','Ω':'O','Ώ':'O'
+        };
+        return text.split('').map(char => greekMap[char] || char).join('');
+    }
+    
+    // Auto-generate slug from name based on settings
     $('#name').on('blur', function() {
         if ($('#slug').val() === '') {
-            const slug = $(this).val().toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-+|-+$/g, '');
+            let slug = $(this).val().toLowerCase();
+            
+            // Apply pattern based on settings
+            <?php if ($allowed_chars === 'letters_numbers_underscores_hyphens_greeklish'): ?>
+            // Convert Greek to Greeklish first
+            slug = greekToGreeklish(slug);
+            slug = slug.replace(/[^a-z0-9_\-]+/g, '-');
+            <?php elseif ($allowed_chars === 'letters_numbers_underscores_hyphens_greek'): ?>
+            // Keep letters, numbers, underscores, hyphens, and Greek characters
+            slug = slug.replace(/[^a-z0-9_\-\u0370-\u03ff\u1f00-\u1fff]+/g, '-');
+            <?php elseif ($allowed_chars === 'letters_numbers_underscores_hyphens'): ?>
+            // Keep letters, numbers, underscores, and hyphens
+            slug = slug.replace(/[^a-z0-9_\-]+/g, '-');
+            <?php elseif ($allowed_chars === 'letters_numbers_hyphens'): ?>
+            // Keep letters, numbers, and hyphens only
+            slug = slug.replace(/[^a-z0-9\-]+/g, '-');
+            <?php else: // letters_numbers ?>
+            // Keep letters and numbers only
+            slug = slug.replace(/[^a-z0-9]+/g, '-');
+            <?php endif; ?>
+            
+            // Remove leading/trailing dashes
+            slug = slug.replace(/^-+|-+$/g, '');
             $('#slug').val(slug);
         }
     });

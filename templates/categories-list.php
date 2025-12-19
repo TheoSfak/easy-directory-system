@@ -8,8 +8,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Get categories
-$taxonomy = isset($_GET['taxonomy']) ? sanitize_text_field($_GET['taxonomy']) : 'category';
+// Get categories - default to product_cat if WooCommerce is active
+$default_taxonomy = class_exists('WooCommerce') ? 'product_cat' : 'category';
+$taxonomy = isset($_GET['taxonomy']) ? sanitize_text_field($_GET['taxonomy']) : $default_taxonomy;
 $categories = EDS_Category::get_all_categories($taxonomy);
 $stats = EDS_Category::get_statistics($taxonomy);
 
@@ -139,21 +140,15 @@ $available_taxonomies = get_taxonomies(array('public' => true), 'objects');
         
         <!-- Action Buttons -->
         <div class="eds-sync-buttons" style="margin-bottom: 20px;">
-            <button type="button" class="button button-primary button-large eds-enable-all" style="height: 36px;">
+            <a href="<?php echo admin_url('admin.php?page=easy-categories-add&taxonomy=' . $taxonomy); ?>" class="button button-primary button-large" style="height: 36px; line-height: 36px; padding: 0 20px;">
+                <span class="dashicons dashicons-plus" style="margin-top: 4px;"></span>
+                <?php _e('Add New Category', 'easy-directory-system'); ?>
+            </a>
+            
+            <button type="button" class="button button-secondary button-large eds-enable-all" style="height: 36px; margin-left: 10px;">
                 <span class="dashicons dashicons-yes" style="margin-top: 4px;"></span>
                 <?php _e('Enable All Categories', 'easy-directory-system'); ?>
             </button>
-            
-            <?php if (EDS_WooCommerce_Sync::is_woocommerce_active()): ?>
-            <button class="eds-sync-btn eds-sync-to-woo">
-                <span class="dashicons dashicons-update-alt"></span>
-                <?php _e('Sync to WooCommerce', 'easy-directory-system'); ?>
-            </button>
-            <button class="eds-sync-btn eds-sync-from-woo">
-                <span class="dashicons dashicons-update-alt"></span>
-                <?php _e('Sync from WooCommerce', 'easy-directory-system'); ?>
-            </button>
-            <?php endif; ?>
         </div>
         
         <!-- Categories Table -->

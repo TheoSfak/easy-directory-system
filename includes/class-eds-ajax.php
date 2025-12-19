@@ -33,6 +33,7 @@ class EDS_Ajax {
         add_action('wp_ajax_eds_toggle_category', array($this, 'toggle_category'));
         add_action('wp_ajax_eds_delete_category', array($this, 'delete_category'));
         add_action('wp_ajax_eds_sync_woocommerce', array($this, 'sync_woocommerce'));
+        add_action('wp_ajax_eds_get_orphaned_categories', array($this, 'get_orphaned_categories'));
         add_action('wp_ajax_eds_update_position', array($this, 'update_position'));
         add_action('wp_ajax_eds_get_statistics', array($this, 'get_statistics'));
         add_action('wp_ajax_eds_enable_all_categories', array($this, 'enable_all_categories'));
@@ -95,15 +96,27 @@ class EDS_Ajax {
     }
     
     /**
+     * Get orphaned categories
+     */
+    public function get_orphaned_categories() {
+        $this->verify_nonce();
+        
+        $orphaned = EDS_WooCommerce_Sync::get_orphaned_categories();
+        
+        wp_send_json_success(array('orphaned' => $orphaned));
+    }
+    
+    /**
      * Sync with WooCommerce
      */
     public function sync_woocommerce() {
         $this->verify_nonce();
         
         $direction = isset($_POST['direction']) ? sanitize_text_field($_POST['direction']) : 'to_woo';
+        $remove_orphaned = isset($_POST['remove_orphaned']) ? (bool)$_POST['remove_orphaned'] : false;
         
         if ($direction === 'from_woo') {
-            $result = EDS_WooCommerce_Sync::sync_from_woocommerce();
+            $result = EDS_WooCommerce_Sync::sync_from_woocommerce($remove_orphaned);
         } else {
             $result = EDS_WooCommerce_Sync::sync_to_woocommerce();
         }

@@ -57,9 +57,9 @@ class EDS_Admin {
             array($this, 'render_categories_page')
         );
         
-        // Add new category
+        // Add new category (hidden from menu, accessed via button)
         add_submenu_page(
-            'easy-categories',
+            null, // null parent = hidden from menu but accessible via URL
             __('Add New Category', 'easy-directory-system'),
             __('Add New Category', 'easy-directory-system'),
             'manage_categories',

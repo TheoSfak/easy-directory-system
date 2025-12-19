@@ -3,7 +3,7 @@
  * Plugin Name: Easy Directory System
  * Plugin URI: https://github.com/TheoSfak/easy-directory-system
  * Description: Advanced category management system for WordPress with PrestaShop-style interface. Manage categories with SEO tools, WooCommerce synchronization, and WordPress menu integration.
- * Version: 1.0.0
+ * Version: 1.0.5
  * Author: Theo Sfak
  * Author URI: https://github.com/TheoSfak
  * License: GPL v2 or later
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('EDS_VERSION', '1.0.0');
+define('EDS_VERSION', '1.0.5');
 define('EDS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('EDS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('EDS_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -148,14 +148,23 @@ class Easy_Directory_System {
             'eds-admin-script',
             EDS_PLUGIN_URL . 'assets/js/admin.js',
             array('jquery', 'jquery-ui-sortable'),
-            EDS_VERSION,
+            EDS_VERSION . '.' . time(), // Force reload by adding timestamp
             true
         );
+        
+        // Get settings
+        $eds_settings = get_option('eds_settings', array());
+        $allowed_url_chars = isset($eds_settings['allowed_url_chars']) ? $eds_settings['allowed_url_chars'] : 'letters_numbers_underscores_hyphens';
+        $sync_mode = isset($eds_settings['sync_mode']) ? $eds_settings['sync_mode'] : 'add_only';
         
         // Localize script
         wp_localize_script('eds-admin-script', 'edsAjax', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('eds_ajax_nonce'),
+            'settings' => array(
+                'allowed_url_chars' => $allowed_url_chars,
+                'sync_mode' => $sync_mode
+            ),
             'strings' => array(
                 'confirm_delete' => __('Are you sure you want to delete this category?', 'easy-directory-system'),
                 'confirm_bulk_delete' => __('Are you sure you want to delete selected categories?', 'easy-directory-system'),

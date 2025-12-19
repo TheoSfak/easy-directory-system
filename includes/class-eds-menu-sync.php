@@ -66,8 +66,13 @@ class EDS_Menu_Sync {
         $enabled_categories = array();
         foreach ($all_terms as $term) {
             $extended_data = EDS_Database::get_category_data($term->term_id);
-            if ($extended_data && $extended_data->is_enabled) {
-                $term->eds_position = $extended_data->position ? intval($extended_data->position) : 999;
+            
+            // If no extended data exists, category is enabled by default
+            // If extended data exists, check is_enabled flag
+            $is_enabled = !$extended_data || $extended_data->is_enabled;
+            
+            if ($is_enabled) {
+                $term->eds_position = ($extended_data && $extended_data->position) ? intval($extended_data->position) : 999;
                 $enabled_categories[] = $term;
             }
         }
@@ -112,8 +117,13 @@ class EDS_Menu_Sync {
             $children_sorted = array();
             foreach ($children as $child) {
                 $child_extended = EDS_Database::get_category_data($child->term_id);
-                if ($child_extended && $child_extended->is_enabled) {
-                    $child->eds_position = $child_extended->position ? intval($child_extended->position) : 999;
+                
+                // If no extended data exists, category is enabled by default
+                // If extended data exists, check is_enabled flag
+                $is_enabled = !$child_extended || $child_extended->is_enabled;
+                
+                if ($is_enabled) {
+                    $child->eds_position = ($child_extended && $child_extended->position) ? intval($child_extended->position) : 999;
                     $children_sorted[] = $child;
                 }
             }
