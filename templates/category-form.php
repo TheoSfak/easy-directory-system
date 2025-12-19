@@ -149,16 +149,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eds_category_nonce'])
         
         EDS_Database::save_category_data($saved_term_id, $extended_data_args);
         
-        echo '<div class="notice notice-success"><p>' . __('Category saved successfully!', 'easy-directory-system') . '</p></div>';
-        
-        // Reload category data
-        if (!$is_edit) {
-            wp_redirect(admin_url('admin.php?page=easy-categories-add&action=edit&term_id=' . $saved_term_id));
-            exit;
-        } else {
-            $category = get_term($saved_term_id, $taxonomy);
-            $extended_data = EDS_Database::get_category_data($saved_term_id);
-        }
+        // Redirect to categories listing
+        wp_redirect(admin_url('admin.php?page=easy-categories&saved=1'));
+        exit;
     }
 }
 

@@ -114,9 +114,19 @@
             const $button = $(this);
             $button.prop('disabled', true).text('Enabling...');
             
-            // Get taxonomy from URL or default
+            // Get taxonomy from URL, select dropdown, or PHP default
             const urlParams = new URLSearchParams(window.location.search);
-            const taxonomy = urlParams.get('taxonomy') || 'category';
+            let taxonomy = urlParams.get('taxonomy');
+            
+            // If not in URL, check if taxonomy switcher exists and get its value
+            if (!taxonomy && $('#taxonomy-switcher').length) {
+                taxonomy = $('#taxonomy-switcher').val();
+            }
+            
+            // Final fallback to category
+            if (!taxonomy) {
+                taxonomy = 'category';
+            }
             
             $.ajax({
                 url: edsAjax.ajaxurl,

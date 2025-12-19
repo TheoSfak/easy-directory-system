@@ -20,6 +20,26 @@ $available_taxonomies = get_taxonomies(array('public' => true), 'objects');
 
 <div class="wrap">
     <?php
+    // Show success message if redirected after save
+    if (isset($_GET['saved']) && $_GET['saved'] == '1') {
+        echo '<div class="notice notice-success is-dismissible"><p>' . __('Category saved successfully!', 'easy-directory-system') . '</p></div>';
+    }
+    
+    // Debug: Check if database table exists (only for admins)
+    if (current_user_can('manage_options') && isset($_GET['debug'])) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'eds_category_data';
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'");
+        
+        if (!$table_exists) {
+            echo '<div class="notice notice-error"><p><strong>Database Issue:</strong> Table ' . esc_html($table_name) . ' does not exist! Try deactivating and reactivating the plugin.</p></div>';
+        } else {
+            $row_count = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
+            $enabled_count = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE is_enabled = 1");
+            echo '<div class="notice notice-info"><p><strong>Debug:</strong> Table exists with ' . $row_count . ' rows, ' . $enabled_count . ' enabled categories.</p></div>';
+        }
+    }
+    
     // Breadcrumb navigation
     $parent_id = isset($_GET['parent_id']) ? intval($_GET['parent_id']) : 0;
     ?>
@@ -160,7 +180,7 @@ $available_taxonomies = get_taxonomies(array('public' => true), 'objects');
                         <th><input type="checkbox" id="select-all"></th>
                         <th><?php _e('ID', 'easy-directory-system'); ?></th>
                         <th><?php _e('Name', 'easy-directory-system'); ?></th>
-                        <th><?php _e('Description', 'easy-directory-system'); ?></th>
+                        <th><?php _e('Friendly URL', 'easy-directory-system'); ?></th>
                         <th><?php _e('Products', 'easy-directory-system'); ?></th>
                         <th><?php _e('Position', 'easy-directory-system'); ?></th>
                         <th><?php _e('Displayed', 'easy-directory-system'); ?></th>
@@ -222,7 +242,7 @@ $available_taxonomies = get_taxonomies(array('public' => true), 'objects');
                                 </small>
                             <?php endif; ?>
                         </td>
-                        <td><?php echo esc_html(wp_trim_words($category->description, 10)); ?></td>
+                        <td><code style="background: #f0f0f1; padding: 2px 6px; border-radius: 3px; font-size: 12px;"><?php echo esc_html($category->slug); ?></code></td>
                         <td><?php echo $category->product_count; ?></td>
                         <td><?php echo $category->extended_data ? $category->extended_data->position : 0; ?></td>
                         <td>
@@ -230,7 +250,13 @@ $available_taxonomies = get_taxonomies(array('public' => true), 'objects');
                                 <input type="checkbox" 
                                        class="category-toggle"
                                        data-term-id="<?php echo $category->term_id; ?>"
-                                       <?php checked($category->extended_data ? $category->extended_data->is_enabled : 0, 1); ?>>
+                                       <?php 
+                                       $is_enabled = 0;
+                                       if ($category->extended_data && isset($category->extended_data->is_enabled)) {
+                                           $is_enabled = $category->extended_data->is_enabled;
+                                       }
+                                       checked($is_enabled, 1); 
+                                       ?>>
                                 <span class="eds-toggle-slider"></span>
                             </label>
                         </td>
