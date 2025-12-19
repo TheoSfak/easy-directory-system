@@ -287,8 +287,8 @@ class EDS_Ajax {
         $count = 0;
         $errors = array();
         
-        // Get URL settings
-        $allowed_chars = get_option('eds_allowed_url_chars', 'letters_numbers_underscores_hyphens');
+        // Get URL settings - default to Greeklish conversion for Greek sites
+        $allowed_chars = get_option('eds_allowed_url_chars', 'letters_numbers_underscores_hyphens_greeklish');
         
         foreach ($terms as $term) {
             // Generate new slug from term name
@@ -296,9 +296,18 @@ class EDS_Ajax {
             
             // Only update if slug changed
             if ($new_slug !== $term->slug) {
+                // Force our custom slug using filter to bypass WordPress sanitization
+                add_filter('pre_term_slug', function($slug) use ($new_slug) {
+                    return $new_slug;
+                }, 10, 1);
+                
                 $result = wp_update_term($term->term_id, $taxonomy, array(
-                    'slug' => $new_slug
+                    'slug' => $new_slug,
+                    'name' => $term->name  // Keep name unchanged
                 ));
+                
+                // Remove filter after use
+                remove_all_filters('pre_term_slug');
                 
                 if (is_wp_error($result)) {
                     $errors[] = sprintf(__('Failed to update "%s": %s', 'easy-directory-system'), $term->name, $result->get_error_message());
@@ -357,11 +366,13 @@ class EDS_Ajax {
         // Apply character rules based on setting
         switch($allowed_chars) {
             case 'letters_numbers_underscores_hyphens_greeklish':
-                // Convert Greek to Greeklish FIRST
+                // Convert Greek to Greeklish FIRST (before lowercasing)
                 $slug = strtr($slug, $greek_map);
-                // Then lowercase
+                // Then lowercase all characters
                 $slug = function_exists('mb_strtolower') ? mb_strtolower($slug, 'UTF-8') : strtolower($slug);
-                $slug = preg_replace('/[^a-z0-9_\-]/', '-', $slug);
+                // Replace spaces and invalid characters with hyphens
+                $slug = preg_replace('/\s+/', '-', $slug);  // Spaces to hyphens first
+                $slug = preg_replace('/[^a-z0-9_\-]/', '-', $slug);  // Other invalid chars to hyphens
                 break;
             case 'letters_numbers_underscores_hyphens_greek':
                 // Keep Greek characters (lowercase first)
