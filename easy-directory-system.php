@@ -3,7 +3,7 @@
  * Plugin Name: Easy Directory System
  * Plugin URI: https://github.com/TheoSfak/easy-directory-system
  * Description: Advanced category management system for WordPress with PrestaShop-style interface. Manage categories with SEO tools, WooCommerce synchronization, and WordPress menu integration.
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: Theo Sfak
  * Author URI: https://github.com/TheoSfak
  * License: GPL v2 or later
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('EDS_VERSION', '1.0.5');
+define('EDS_VERSION', '1.0.6');
 define('EDS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('EDS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('EDS_PLUGIN_BASENAME', plugin_basename(__FILE__));

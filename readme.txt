@@ -1,10 +1,11 @@
 === Easy Directory System ===
-Contributors: TheoSfak
+Contributors: irmaiden
+Donate link: https://paypal.me/TheodoreSfakianakis
 Tags: categories, directory, woocommerce, multilingual, seo
 Requires at least: 5.8
-Tested up to: 6.4
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,7 +35,27 @@ Features:
 3. Navigate to 'Easy Categories' in the WordPress admin menu
 4. Start managing your categories!
 
+== Frequently Asked Questions ==
+
+= How do I donate? =
+
+You can support development via:
+* PayPal: https://paypal.me/TheodoreSfakianakis
+* Revolut: https://revolut.me/theodocmx
+
+Your donations help us continue developing and maintaining this plugin!
+
 == Changelog ==
+
+= 1.0.5 =
+* Added: Greek to Greeklish auto-conversion for friendly URLs
+* Added: Radio button interface for URL character settings
+* Improved: Greek character support with real-time validation in slug field
+* Improved: "Add New Category" moved to button inside All Categories page
+* Improved: Dynamic description text showing allowed characters based on settings
+* Fixed: Menu sync now includes all categories (with/without extended data)
+* Fixed: Removed WooCommerce cross-taxonomy sync buttons
+* Fixed: Page access issues after UI reorganization
 
 = 1.0.0 =
 * Initial release
