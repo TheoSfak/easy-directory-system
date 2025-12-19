@@ -10,6 +10,41 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+/* Category color badge */
+.eds-category-color-badge {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+    border: 2px solid rgba(0,0,0,0.1);
+}
+
+/* Category icon in list */
+td .dashicons {
+    vertical-align: middle;
+    margin-right: 5px;
+    font-size: 18px;
+}
+
+/* Icon picker wrapper */
+.eds-icon-picker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.eds-icon-picker-btn .dashicons {
+    margin-right: 5px;
+}
+
+.eds-selected-icon {
+    font-size: 13px;
+    color: #666;
+    font-style: italic;
+}
+
 /* Statistics dashboard */
 .eds-stats-grid {
     display: grid;

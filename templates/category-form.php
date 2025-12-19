@@ -114,6 +114,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eds_category_nonce'])
             }
         }
         
+        // Process scheduled dates
+        $scheduled_from = !empty($_POST['scheduled_from']) ? sanitize_text_field($_POST['scheduled_from']) : null;
+        $scheduled_until = !empty($_POST['scheduled_until']) ? sanitize_text_field($_POST['scheduled_until']) : null;
+        
+        // Convert datetime-local format to MySQL datetime
+        if ($scheduled_from) {
+            $scheduled_from = date('Y-m-d H:i:s', strtotime($scheduled_from));
+        }
+        if ($scheduled_until) {
+            $scheduled_until = date('Y-m-d H:i:s', strtotime($scheduled_until));
+        }
+        
         // Save extended data
         $extended_data_args = array(
             'taxonomy' => $taxonomy,
@@ -124,6 +136,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eds_category_nonce'])
             'redirection_type' => sanitize_text_field($_POST['redirection_type']),
             'redirection_target' => isset($_POST['redirection_target']) ? intval($_POST['redirection_target']) : null,
             'group_access' => isset($_POST['group_access']) ? json_encode($_POST['group_access']) : json_encode(array()),
+            'scheduled_from' => $scheduled_from,
+            'scheduled_until' => $scheduled_until,
+            'category_color' => isset($_POST['category_color']) ? sanitize_hex_color($_POST['category_color']) : '#3498db',
+            'category_icon' => isset($_POST['category_icon']) ? sanitize_text_field($_POST['category_icon']) : '',
             'meta_data' => json_encode(array(
                 'meta_title' => $meta_title,
                 'meta_description' => $meta_description,
@@ -262,6 +278,32 @@ if ($extended_data && $extended_data->group_access) {
                         </div>
                     </div>
                     
+                    <!-- Scheduled Visibility Section -->
+                    <div class="eds-form-section">
+                        <h2><?php _e('Scheduled Visibility', 'easy-directory-system'); ?></h2>
+                        <p class="description"><?php _e('Set dates to automatically show/hide this category. Leave empty for always visible.', 'easy-directory-system'); ?></p>
+                        
+                        <div class="eds-form-row">
+                            <label><?php _e('Show From', 'easy-directory-system'); ?></label>
+                            <?php $scheduled_from = $is_edit && isset($extended_data->scheduled_from) ? $extended_data->scheduled_from : ''; ?>
+                            <input type="datetime-local" 
+                                   name="scheduled_from" 
+                                   value="<?php echo esc_attr($scheduled_from ? date('Y-m-d\TH:i', strtotime($scheduled_from)) : ''); ?>"
+                                   class="eds-datetime-picker">
+                            <p class="description"><?php _e('Category will be visible starting from this date/time', 'easy-directory-system'); ?></p>
+                        </div>
+                        
+                        <div class="eds-form-row">
+                            <label><?php _e('Hide After', 'easy-directory-system'); ?></label>
+                            <?php $scheduled_until = $is_edit && isset($extended_data->scheduled_until) ? $extended_data->scheduled_until : ''; ?>
+                            <input type="datetime-local" 
+                                   name="scheduled_until" 
+                                   value="<?php echo esc_attr($scheduled_until ? date('Y-m-d\TH:i', strtotime($scheduled_until)) : ''); ?>"
+                                   class="eds-datetime-picker">
+                            <p class="description"><?php _e('Category will be hidden after this date/time', 'easy-directory-system'); ?></p>
+                        </div>
+                    </div>
+                    
                     <!-- SEO Section with Preview -->
                     <?php if ($settings['seo_enabled']): ?>
                     <div class="eds-form-section">
@@ -325,6 +367,40 @@ if ($extended_data && $extended_data->group_access) {
                                     ?>
                                 </p>
                             <?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <!-- Color & Icon -->
+                    <div class="eds-form-section">
+                        <h2><?php _e('Category Color & Icon', 'easy-directory-system'); ?></h2>
+                        
+                        <div class="eds-form-row">
+                            <label><?php _e('Category Color', 'easy-directory-system'); ?></label>
+                            <?php $category_color = $is_edit && isset($extended_data->category_color) ? $extended_data->category_color : '#3498db'; ?>
+                            <input type="text" 
+                                   name="category_color" 
+                                   value="<?php echo esc_attr($category_color); ?>"
+                                   class="eds-color-picker">
+                            <p class="description"><?php _e('Pick a color to represent this category (shown in admin list)', 'easy-directory-system'); ?></p>
+                        </div>
+                        
+                        <div class="eds-form-row">
+                            <label><?php _e('Category Icon', 'easy-directory-system'); ?></label>
+                            <?php $category_icon = $is_edit && isset($extended_data->category_icon) ? $extended_data->category_icon : ''; ?>
+                            <div class="eds-icon-picker-wrapper">
+                                <input type="hidden" 
+                                       name="category_icon" 
+                                       id="category_icon" 
+                                       value="<?php echo esc_attr($category_icon); ?>">
+                                <button type="button" class="button eds-icon-picker-btn">
+                                    <span class="dashicons <?php echo $category_icon ? esc_attr($category_icon) : 'dashicons-category'; ?>"></span>
+                                    <?php _e('Choose Icon', 'easy-directory-system'); ?>
+                                </button>
+                                <span class="eds-selected-icon">
+                                    <?php echo $category_icon ? esc_html($category_icon) : __('No icon selected', 'easy-directory-system'); ?>
+                                </span>
+                            </div>
+                            <p class="description"><?php _e('Select a dashicon for this category', 'easy-directory-system'); ?></p>
                         </div>
                     </div>
                     

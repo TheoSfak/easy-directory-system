@@ -3,7 +3,7 @@
  * Plugin Name: Easy Directory System
  * Plugin URI: https://github.com/TheoSfak/easy-directory-system
  * Description: Advanced category management system for WordPress with PrestaShop-style interface. Manage categories with SEO tools, WooCommerce synchronization, and WordPress menu integration.
- * Version: 1.0.6
+ * Version: 1.0.7
  * Author: Theo Sfak
  * Author URI: https://github.com/TheoSfak
  * License: GPL v2 or later
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('EDS_VERSION', '1.0.6');
+define('EDS_VERSION', '1.0.7');
 define('EDS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('EDS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('EDS_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -170,11 +170,14 @@ class Easy_Directory_System {
             return;
         }
         
+        // Enqueue color picker
+        wp_enqueue_style('wp-color-picker');
+        
         // Enqueue CSS
         wp_enqueue_style(
             'eds-admin-style',
             EDS_PLUGIN_URL . 'assets/css/admin.css',
-            array(),
+            array('wp-color-picker'),
             EDS_VERSION
         );
         
@@ -182,7 +185,7 @@ class Easy_Directory_System {
         wp_enqueue_script(
             'eds-admin-script',
             EDS_PLUGIN_URL . 'assets/js/admin.js',
-            array('jquery', 'jquery-ui-sortable'),
+            array('jquery', 'jquery-ui-sortable', 'wp-color-picker'),
             EDS_VERSION . '.' . time(), // Force reload by adding timestamp
             true
         );

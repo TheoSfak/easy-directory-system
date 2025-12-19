@@ -64,12 +64,26 @@ class EDS_Menu_Sync {
         
         // Filter enabled and add position data
         $enabled_categories = array();
+        $current_time = current_time('mysql');
+        
         foreach ($all_terms as $term) {
             $extended_data = EDS_Database::get_category_data($term->term_id);
             
             // If no extended data exists, category is enabled by default
             // If extended data exists, check is_enabled flag
             $is_enabled = !$extended_data || $extended_data->is_enabled;
+            
+            // Check scheduled visibility
+            if ($extended_data) {
+                // If scheduled_from is set and future, hide category
+                if (!empty($extended_data->scheduled_from) && $current_time < $extended_data->scheduled_from) {
+                    $is_enabled = false;
+                }
+                // If scheduled_until is set and past, hide category
+                if (!empty($extended_data->scheduled_until) && $current_time > $extended_data->scheduled_until) {
+                    $is_enabled = false;
+                }
+            }
             
             if ($is_enabled) {
                 $term->eds_position = ($extended_data && $extended_data->position) ? intval($extended_data->position) : 999;

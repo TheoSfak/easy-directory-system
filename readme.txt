@@ -5,7 +5,7 @@ Tags: categories, directory, woocommerce, multilingual, seo
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -59,6 +59,16 @@ You can support development via:
 Your donations help us continue developing and maintaining this plugin!
 
 == Changelog ==
+
+= 1.0.7 =
+* Added: Category Duplicator - clone categories with all metadata and settings
+* Added: Scheduled Visibility - show/hide categories automatically based on date/time
+* Added: Color Coding - assign custom colors to categories with WordPress color picker
+* Added: Icon Picker - select from 300+ dashicons for category visual identification
+* Enhanced: Database schema with category_color, category_icon, scheduled_from, scheduled_until columns
+* Enhanced: Categories list now displays color badges and icons for quick identification
+* Enhanced: WordPress Color Picker integration for seamless color selection
+* Fixed: Frontend CSS enqueuing for mega menu overflow handling
 
 = 1.0.6 =
 * Added: Import/Export functionality with JSON and CSV format support

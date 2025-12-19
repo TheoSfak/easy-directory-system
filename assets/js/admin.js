@@ -142,6 +142,45 @@
             });
         });
         
+        // Duplicate category
+        $('.eds-duplicate-category').on('click', function(e) {
+            e.preventDefault();
+            
+            if (!confirm('Duplicate this category with all settings?')) {
+                return;
+            }
+            
+            const $button = $(this);
+            const termId = $button.data('term-id');
+            const taxonomy = $button.data('taxonomy') || 'category';
+            
+            $button.prop('disabled', true).css('opacity', '0.5');
+            
+            $.ajax({
+                url: edsAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'eds_duplicate_category',
+                    nonce: edsAjax.nonce,
+                    term_id: termId,
+                    taxonomy: taxonomy
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.data.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.data.message);
+                        $button.prop('disabled', false).css('opacity', '1');
+                    }
+                },
+                error: function() {
+                    alert('Failed to duplicate category');
+                    $button.prop('disabled', false).css('opacity', '1');
+                }
+            });
+        });
+        
         // Delete category
         $('.eds-delete-category').on('click', function(e) {
             e.preventDefault();
@@ -426,6 +465,59 @@
         $('.seo-meta-description').on('input', function() {
             const desc = $(this).val() || 'Category description will appear here...';
             $('.eds-seo-preview-desc').text(desc.substring(0, 160) + (desc.length > 160 ? '...' : ''));
+        });
+        
+        // Initialize WordPress color picker
+        if ($.fn.wpColorPicker) {
+            $('.eds-color-picker').wpColorPicker();
+        }
+        
+        // Icon picker
+        const dashicons = ['dashicons-admin-appearance','dashicons-admin-collapse','dashicons-admin-comments','dashicons-admin-customizer','dashicons-admin-generic','dashicons-admin-home','dashicons-admin-links','dashicons-admin-media','dashicons-admin-multisite','dashicons-admin-network','dashicons-admin-page','dashicons-admin-plugins','dashicons-admin-post','dashicons-admin-settings','dashicons-admin-site-alt','dashicons-admin-site-alt2','dashicons-admin-site-alt3','dashicons-admin-site','dashicons-admin-tools','dashicons-admin-users','dashicons-album','dashicons-align-center','dashicons-align-full-width','dashicons-align-left','dashicons-align-none','dashicons-align-pull-left','dashicons-align-pull-right','dashicons-align-right','dashicons-align-wide','dashicons-analytics','dashicons-archive','dashicons-arrow-down-alt','dashicons-arrow-down-alt2','dashicons-arrow-down','dashicons-arrow-left-alt','dashicons-arrow-left-alt2','dashicons-arrow-left','dashicons-arrow-right-alt','dashicons-arrow-right-alt2','dashicons-arrow-right','dashicons-arrow-up-alt','dashicons-arrow-up-alt2','dashicons-arrow-up','dashicons-art','dashicons-awards','dashicons-backup','dashicons-bank','dashicons-beer','dashicons-bell','dashicons-block-default','dashicons-book-alt','dashicons-book','dashicons-buddicons-activity','dashicons-buddicons-bbpress-logo','dashicons-buddicons-buddypress-logo','dashicons-buddicons-community','dashicons-buddicons-forums','dashicons-buddicons-friends','dashicons-buddicons-groups','dashicons-buddicons-pm','dashicons-buddicons-replies','dashicons-buddicons-topics','dashicons-buddicons-tracking','dashicons-building','dashicons-businessman','dashicons-businessperson','dashicons-businesswoman','dashicons-button','dashicons-calendar-alt','dashicons-calendar','dashicons-camera-alt','dashicons-camera','dashicons-car','dashicons-carrot','dashicons-cart','dashicons-category','dashicons-chart-area','dashicons-chart-bar','dashicons-chart-line','dashicons-chart-pie','dashicons-clipboard','dashicons-clock','dashicons-cloud-saved','dashicons-cloud-upload','dashicons-cloud','dashicons-code-standards','dashicons-coffee','dashicons-color-picker','dashicons-columns','dashicons-controls-back','dashicons-controls-forward','dashicons-controls-pause','dashicons-controls-play','dashicons-controls-repeat','dashicons-controls-skipback','dashicons-controls-skipforward','dashicons-controls-volumeoff','dashicons-controls-volumeon','dashicons-cover-image','dashicons-dashboard','dashicons-database-add','dashicons-database-export','dashicons-database-import','dashicons-database-remove','dashicons-database-view','dashicons-database','dashicons-desktop','dashicons-dismiss','dashicons-download','dashicons-drumstick','dashicons-edit-large','dashicons-edit-page','dashicons-edit','dashicons-editor-aligncenter','dashicons-editor-alignleft','dashicons-editor-alignright','dashicons-editor-bold','dashicons-editor-break','dashicons-editor-code-duplicate','dashicons-editor-code','dashicons-editor-contract','dashicons-editor-customchar','dashicons-editor-expand','dashicons-editor-help','dashicons-editor-indent','dashicons-editor-insertmore','dashicons-editor-italic','dashicons-editor-justify','dashicons-editor-kitchensink','dashicons-editor-ltr','dashicons-editor-ol-rtl','dashicons-editor-ol','dashicons-editor-outdent','dashicons-editor-paragraph','dashicons-editor-paste-text','dashicons-editor-paste-word','dashicons-editor-quote','dashicons-editor-removeformatting','dashicons-editor-rtl','dashicons-editor-spellcheck','dashicons-editor-strikethrough','dashicons-editor-table','dashicons-editor-textcolor','dashicons-editor-ul','dashicons-editor-underline','dashicons-editor-unlink','dashicons-editor-video','dashicons-ellipsis','dashicons-email-alt','dashicons-email-alt2','dashicons-email','dashicons-embed-audio','dashicons-embed-generic','dashicons-embed-photo','dashicons-embed-post','dashicons-embed-video','dashicons-excerpt-view','dashicons-exit','dashicons-external','dashicons-facebook-alt','dashicons-facebook','dashicons-feedback','dashicons-filter','dashicons-flag','dashicons-food','dashicons-format-aside','dashicons-format-audio','dashicons-format-chat','dashicons-format-gallery','dashicons-format-image','dashicons-format-quote','dashicons-format-status','dashicons-format-video','dashicons-forms','dashicons-fullscreen-alt','dashicons-fullscreen-exit-alt','dashicons-games','dashicons-gears','dashicons-google','dashicons-grid-view','dashicons-group','dashicons-groups','dashicons-hammer','dashicons-heart','dashicons-hidden','dashicons-hourglass','dashicons-html','dashicons-id-alt','dashicons-id','dashicons-image-crop','dashicons-image-filter','dashicons-image-flip-horizontal','dashicons-image-flip-vertical','dashicons-image-rotate-left','dashicons-image-rotate-right','dashicons-image-rotate','dashicons-images-alt','dashicons-images-alt2','dashicons-index-card','dashicons-info-outline','dashicons-info','dashicons-instagram','dashicons-laptop','dashicons-layout','dashicons-leftright','dashicons-lightbulb','dashicons-linkedin','dashicons-list-view','dashicons-location-alt','dashicons-location','dashicons-lock-duplicate','dashicons-lock','dashicons-media-archive','dashicons-media-audio','dashicons-media-code','dashicons-media-default','dashicons-media-document','dashicons-media-interactive','dashicons-media-spreadsheet','dashicons-media-text','dashicons-media-video','dashicons-megaphone','dashicons-menu-alt','dashicons-menu-alt2','dashicons-menu-alt3','dashicons-menu','dashicons-microphone','dashicons-migrate','dashicons-minus','dashicons-money-alt','dashicons-money','dashicons-move','dashicons-nametag','dashicons-networking','dashicons-no-alt','dashicons-no','dashicons-open-folder','dashicons-palmtree','dashicons-paperclip','dashicons-pdf','dashicons-performance','dashicons-pets','dashicons-phone','dashicons-playlist-audio','dashicons-playlist-video','dashicons-plugins-checked','dashicons-plus-alt','dashicons-plus-alt2','dashicons-plus','dashicons-portfolio','dashicons-post-status','dashicons-pressthis','dashicons-printer','dashicons-privacy','dashicons-products','dashicons-randomize','dashicons-redo','dashicons-rest-api','dashicons-rss','dashicons-saved','dashicons-schedule','dashicons-screenoptions','dashicons-search','dashicons-share-alt','dashicons-share-alt2','dashicons-share','dashicons-shield-alt','dashicons-shield','dashicons-shortcode','dashicons-slides','dashicons-smartphone','dashicons-smiley','dashicons-sort','dashicons-sos','dashicons-spotify','dashicons-star-empty','dashicons-star-filled','dashicons-star-half','dashicons-store','dashicons-superhero-alt','dashicons-superhero','dashicons-tablet','dashicons-tag','dashicons-tagcloud','dashicons-teams','dashicons-testimonial','dashicons-text-page','dashicons-text','dashicons-thumbs-down','dashicons-thumbs-up','dashicons-tickets-alt','dashicons-tickets','dashicons-tide','dashicons-tickets-alt','dashicons-translation','dashicons-trash','dashicons-twitter-alt','dashicons-twitter','dashicons-twitch','dashicons-undo','dashicons-universal-access-alt','dashicons-universal-access','dashicons-unlock','dashicons-update-alt','dashicons-update','dashicons-upload','dashicons-vault','dashicons-video-alt','dashicons-video-alt2','dashicons-video-alt3','dashicons-visibility','dashicons-warning','dashicons-welcome-add-page','dashicons-welcome-comments','dashicons-welcome-learn-more','dashicons-welcome-view-site','dashicons-welcome-widgets-menus','dashicons-welcome-write-blog','dashicons-whatsapp','dashicons-wordpress-alt','dashicons-wordpress','dashicons-yes-alt','dashicons-yes'];
+        
+        $('.eds-icon-picker-btn').on('click', function(e) {
+            e.preventDefault();
+            const $btn = $(this);
+            
+            // Create modal if doesn't exist
+            if ($('#eds-icon-picker-modal').length === 0) {
+                let modal = '<div id="eds-icon-picker-modal" style="display:none;position:fixed;z-index:100000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.7);"><div style="background:#fff;margin:50px auto;padding:20px;width:80%;max-width:800px;max-height:80%;overflow-y:auto;"><h2>Select Icon</h2><input type="text" id="eds-icon-search" placeholder="Search icons..." style="width:100%;padding:8px;margin-bottom:15px;"><div id="eds-icon-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:10px;"></div><button class="button" id="eds-icon-close" style="margin-top:15px;">Close</button></div></div>';
+                $('body').append(modal);
+                
+                // Populate icons
+                let grid = '';
+                dashicons.forEach(icon => {
+                    grid += `<div class="eds-icon-option" data-icon="${icon}" style="text-align:center;cursor:pointer;padding:10px;border:2px solid #ddd;border-radius:4px;"><span class="dashicons ${icon}" style="font-size:32px;"></span></div>`;
+                });
+                $('#eds-icon-grid').html(grid);
+                
+                // Icon search
+                $('#eds-icon-search').on('input', function() {
+                    const search = $(this).val().toLowerCase();
+                    $('.eds-icon-option').each(function() {
+                        const icon = $(this).data('icon');
+                        $(this).toggle(icon.indexOf(search) > -1);
+                    });
+                });
+                
+                // Icon select
+                $(document).on('click', '.eds-icon-option', function() {
+                    const icon = $(this).data('icon');
+                    $('#category_icon').val(icon);
+                    $('.eds-icon-picker-btn .dashicons').attr('class', 'dashicons ' + icon);
+                    $('.eds-selected-icon').text(icon);
+                    $('#eds-icon-picker-modal').hide();
+                });
+                
+                // Close modal
+                $('#eds-icon-close, #eds-icon-picker-modal').on('click', function(e) {
+                    if (e.target === this) {
+                        $('#eds-icon-picker-modal').hide();
+                    }
+                });
+            }
+            
+            $('#eds-icon-picker-modal').show();
         });
     });
     

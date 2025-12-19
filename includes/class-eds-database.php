@@ -30,13 +30,19 @@ class EDS_Database {
             redirection_type varchar(10) DEFAULT '301',
             redirection_target bigint(20) DEFAULT NULL,
             group_access text DEFAULT NULL,
+            category_color varchar(7) DEFAULT '#3498db',
+            category_icon varchar(50) DEFAULT '',
+            scheduled_from datetime DEFAULT NULL,
+            scheduled_until datetime DEFAULT NULL,
             meta_data longtext DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             KEY term_id (term_id),
             KEY taxonomy (taxonomy),
-            KEY position (position)
+            KEY position (position),
+            KEY scheduled_from (scheduled_from),
+            KEY scheduled_until (scheduled_until)
         ) $charset_collate;";
         
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');

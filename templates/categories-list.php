@@ -197,6 +197,14 @@ $available_taxonomies = get_taxonomies(array('public' => true), 'objects');
                         <td><input type="checkbox" name="category[]" value="<?php echo $category->term_id; ?>"></td>
                         <td><?php echo $category->term_id; ?></td>
                         <td>
+                            <?php if ($category->extended_data): ?>
+                                <?php if (!empty($category->extended_data->category_color)): ?>
+                                    <span class="eds-category-color-badge" style="background-color: <?php echo esc_attr($category->extended_data->category_color); ?>;"></span>
+                                <?php endif; ?>
+                                <?php if (!empty($category->extended_data->category_icon)): ?>
+                                    <span class="dashicons <?php echo esc_attr($category->extended_data->category_icon); ?>" style="color: <?php echo esc_attr($category->extended_data->category_color ?: '#3498db'); ?>;"></span>
+                                <?php endif; ?>
+                            <?php endif; ?>
                             <strong>
                                 <?php if ($children_count > 0): ?>
                                     <a href="<?php echo admin_url('admin.php?page=easy-categories&parent_id=' . $category->term_id . '&taxonomy=' . $taxonomy); ?>" 
@@ -231,6 +239,14 @@ $available_taxonomies = get_taxonomies(array('public' => true), 'objects');
                                class="eds-action-btn"
                                title="<?php _e('Edit', 'easy-directory-system'); ?>">
                                 <span class="dashicons dashicons-edit"></span>
+                            </a>
+                            <a href="#" 
+                               class="eds-action-btn eds-duplicate-category" 
+                               data-term-id="<?php echo $category->term_id; ?>"
+                               data-taxonomy="<?php echo $taxonomy; ?>"
+                               style="background: #9b59b6;"
+                               title="<?php _e('Duplicate', 'easy-directory-system'); ?>">
+                                <span class="dashicons dashicons-admin-page"></span>
                             </a>
                             <?php if ($children_count > 0): ?>
                                 <a href="<?php echo admin_url('admin.php?page=easy-categories&parent_id=' . $category->term_id . '&taxonomy=' . $taxonomy); ?>" 

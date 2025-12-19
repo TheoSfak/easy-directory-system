@@ -37,6 +37,7 @@ class EDS_Ajax {
         add_action('wp_ajax_eds_update_position', array($this, 'update_position'));
         add_action('wp_ajax_eds_get_statistics', array($this, 'get_statistics'));
         add_action('wp_ajax_eds_enable_all_categories', array($this, 'enable_all_categories'));
+        add_action('wp_ajax_eds_duplicate_category', array($this, 'duplicate_category'));
     }
     
     /**
@@ -187,6 +188,77 @@ class EDS_Ajax {
         wp_send_json_success(array(
             'message' => sprintf(__('Enabled %d categories', 'easy-directory-system'), $count),
             'count' => $count
+        ));
+    }
+    
+    /**
+     * Duplicate category with all metadata
+     */
+    public function duplicate_category() {
+        $this->verify_nonce();
+        
+        $term_id = isset($_POST['term_id']) ? intval($_POST['term_id']) : 0;
+        $taxonomy = isset($_POST['taxonomy']) ? sanitize_text_field($_POST['taxonomy']) : 'category';
+        
+        if (!$term_id) {
+            wp_send_json_error(array('message' => __('Invalid category ID', 'easy-directory-system')));
+        }
+        
+        // Get original term
+        $original_term = get_term($term_id, $taxonomy);
+        if (is_wp_error($original_term) || !$original_term) {
+            wp_send_json_error(array('message' => __('Category not found', 'easy-directory-system')));
+        }
+        
+        // Create new term with (Copy) suffix
+        $new_name = $original_term->name . ' ' . __('(Copy)', 'easy-directory-system');
+        $new_slug = $original_term->slug . '-copy-' . time();
+        
+        $new_term = wp_insert_term(
+            $new_name,
+            $taxonomy,
+            array(
+                'description' => $original_term->description,
+                'parent' => $original_term->parent,
+                'slug' => $new_slug
+            )
+        );
+        
+        if (is_wp_error($new_term)) {
+            wp_send_json_error(array('message' => $new_term->get_error_message()));
+        }
+        
+        $new_term_id = $new_term['term_id'];
+        
+        // Copy extended data
+        $extended_data = EDS_Database::get_category_data($term_id);
+        if ($extended_data) {
+            $copy_data = array(
+                'is_enabled' => $extended_data->is_enabled,
+                'position' => $extended_data->position,
+                'cover_image' => $extended_data->cover_image,
+                'thumbnail_image' => $extended_data->thumbnail_image,
+                'meta_title' => $extended_data->meta_title,
+                'meta_description' => $extended_data->meta_description,
+                'additional_description' => $extended_data->additional_description,
+                'group_access' => $extended_data->group_access,
+                'redirection_type' => $extended_data->redirection_type,
+                'redirection_target' => $extended_data->redirection_target
+            );
+            EDS_Database::save_category_data($new_term_id, $copy_data);
+        }
+        
+        // Copy term meta
+        $meta_keys = get_term_meta($term_id);
+        foreach ($meta_keys as $key => $values) {
+            foreach ($values as $value) {
+                add_term_meta($new_term_id, $key, maybe_unserialize($value));
+            }
+        }
+        
+        wp_send_json_success(array(
+            'message' => sprintf(__('Category duplicated successfully as "%s"', 'easy-directory-system'), $new_name),
+            'new_term_id' => $new_term_id
         ));
     }
 }
