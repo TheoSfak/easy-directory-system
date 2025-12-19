@@ -286,13 +286,20 @@ class EDS_Ajax {
         
         $count = 0;
         $errors = array();
+        $debug_info = array();
         
         // Get URL settings - default to Greeklish conversion for Greek sites
         $allowed_chars = get_option('eds_allowed_url_chars', 'letters_numbers_underscores_hyphens_greeklish');
+        $debug_info[] = 'Setting: ' . $allowed_chars;
         
         foreach ($terms as $term) {
             // Generate new slug from term name
             $new_slug = $this->generate_slug($term->name, $allowed_chars, $taxonomy, $term->term_id);
+            
+            // Debug first 3 conversions
+            if (count($debug_info) < 4) {
+                $debug_info[] = sprintf('"%s" -> "%s" (was: "%s")', $term->name, $new_slug, $term->slug);
+            }
             
             // Only update if slug changed
             if ($new_slug !== $term->slug) {
@@ -318,14 +325,18 @@ class EDS_Ajax {
         }
         
         $message = sprintf(__('Regenerated %d friendly URLs', 'easy-directory-system'), $count);
+        if (!empty($debug_info)) {
+            $message .= '<br><br><strong>Debug:</strong><br>' . implode('<br>', $debug_info);
+        }
         if (!empty($errors)) {
-            $message .= '<br>' . implode('<br>', $errors);
+            $message .= '<br><br><strong>Errors:</strong><br>' . implode('<br>', $errors);
         }
         
         wp_send_json_success(array(
             'message' => $message,
             'count' => $count,
-            'errors' => $errors
+            'errors' => $errors,
+            'debug' => $debug_info
         ));
     }
     
