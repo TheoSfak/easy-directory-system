@@ -56,25 +56,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eds_category_nonce'])
     
     switch($allowed_chars) {
         case 'letters_numbers':
-            $slug = preg_replace('/[^a-z0-9]/i', '', strtolower($slug));
+            $slug = preg_replace('/[^a-z0-9]/i', '-', strtolower($slug));
             break;
         case 'letters_numbers_hyphens':
-            $slug = preg_replace('/[^a-z0-9\-]/i', '', strtolower($slug));
+            $slug = preg_replace('/[^a-z0-9\-]/i', '-', strtolower($slug));
             break;
         case 'letters_numbers_underscores_hyphens_greek':
             // Allow Greek characters (Unicode ranges)
-            $slug = preg_replace('/[^a-z0-9_\-\x{0370}-\x{03ff}\x{1f00}-\x{1fff}]/ui', '', mb_strtolower($slug, 'UTF-8'));
+            $slug = mb_strtolower($slug, 'UTF-8');
+            $slug = preg_replace('/[^a-z0-9_\-\x{0370}-\x{03ff}\x{1f00}-\x{1fff}]/ui', '-', $slug);
             break;
         case 'letters_numbers_underscores_hyphens_greeklish':
             // Convert Greek to Greeklish first
             $slug = greek_to_greeklish($slug);
-            $slug = preg_replace('/[^a-z0-9_\-]/i', '', strtolower($slug));
+            $slug = strtolower($slug);
+            $slug = preg_replace('/[^a-z0-9_\-]/i', '-', $slug);
             break;
         case 'letters_numbers_underscores_hyphens':
         default:
-            $slug = preg_replace('/[^a-z0-9_\-]/i', '', strtolower($slug));
+            $slug = preg_replace('/[^a-z0-9_\-]/i', '-', strtolower($slug));
             break;
     }
+    
+    // Clean up multiple hyphens and trim
+    $slug = preg_replace('/-+/', '-', $slug);
+    $slug = trim($slug, '-');
     
     // Ensure slug is not empty
     if (empty($slug)) {
