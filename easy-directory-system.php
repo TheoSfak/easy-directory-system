@@ -66,6 +66,9 @@ class Easy_Directory_System {
         
         // Admin scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
+        
+        // Frontend styles for mega menu
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
     }
     
     /**
@@ -207,6 +210,19 @@ class Easy_Directory_System {
         
         // Enqueue media uploader
         wp_enqueue_media();
+    }
+    
+    /**
+     * Enqueue frontend assets
+     */
+    public function enqueue_frontend_assets() {
+        // Enqueue frontend CSS for mega menu fixes
+        wp_enqueue_style(
+            'eds-frontend-style',
+            EDS_PLUGIN_URL . 'assets/css/frontend.css',
+            array(),
+            EDS_VERSION
+        );
     }
 }
 
