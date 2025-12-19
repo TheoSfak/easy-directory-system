@@ -38,6 +38,7 @@ class EDS_Ajax {
         add_action('wp_ajax_eds_get_statistics', array($this, 'get_statistics'));
         add_action('wp_ajax_eds_enable_all_categories', array($this, 'enable_all_categories'));
         add_action('wp_ajax_eds_duplicate_category', array($this, 'duplicate_category'));
+        add_action('wp_ajax_eds_regenerate_urls', array($this, 'regenerate_urls'));
     }
     
     /**
@@ -260,5 +261,117 @@ class EDS_Ajax {
             'message' => sprintf(__('Category duplicated successfully as "%s"', 'easy-directory-system'), $new_name),
             'new_term_id' => $new_term_id
         ));
+    }
+    
+    /**
+     * Regenerate all friendly URLs
+     */
+    public function regenerate_urls() {
+        $this->verify_nonce();
+        
+        $taxonomy = isset($_POST['taxonomy']) ? sanitize_text_field($_POST['taxonomy']) : 'category';
+        
+        // Get all terms in the taxonomy
+        $terms = get_terms(array(
+            'taxonomy' => $taxonomy,
+            'hide_empty' => false,
+            'number' => 0,
+            'orderby' => 'none',
+            'suppress_filter' => true
+        ));
+        
+        if (is_wp_error($terms)) {
+            wp_send_json_error(array('message' => $terms->get_error_message()));
+        }
+        
+        $count = 0;
+        $errors = array();
+        
+        // Get URL settings
+        $allowed_chars = get_option('eds_allowed_url_chars', 'letters_numbers_underscores_hyphens');
+        
+        foreach ($terms as $term) {
+            // Generate new slug from term name
+            $new_slug = $this->generate_slug($term->name, $allowed_chars, $taxonomy, $term->term_id);
+            
+            // Only update if slug changed
+            if ($new_slug !== $term->slug) {
+                $result = wp_update_term($term->term_id, $taxonomy, array(
+                    'slug' => $new_slug
+                ));
+                
+                if (is_wp_error($result)) {
+                    $errors[] = sprintf(__('Failed to update "%s": %s', 'easy-directory-system'), $term->name, $result->get_error_message());
+                } else {
+                    $count++;
+                }
+            }
+        }
+        
+        $message = sprintf(__('Regenerated %d friendly URLs', 'easy-directory-system'), $count);
+        if (!empty($errors)) {
+            $message .= '<br>' . implode('<br>', $errors);
+        }
+        
+        wp_send_json_success(array(
+            'message' => $message,
+            'count' => $count,
+            'errors' => $errors
+        ));
+    }
+    
+    /**
+     * Generate slug from text based on settings
+     */
+    private function generate_slug($text, $allowed_chars, $taxonomy, $term_id = 0) {
+        $slug = strtolower($text);
+        
+        // Greek to Greeklish conversion map
+        $greek_map = array(
+            'α'=>'a','ά'=>'a','Α'=>'a','Ά'=>'a','β'=>'b','Β'=>'b','γ'=>'g','Γ'=>'g','δ'=>'d','Δ'=>'d',
+            'ε'=>'e','έ'=>'e','Ε'=>'e','Έ'=>'e','ζ'=>'z','Ζ'=>'z','η'=>'i','ή'=>'i','Η'=>'i','Ή'=>'i',
+            'θ'=>'th','Θ'=>'th','ι'=>'i','ί'=>'i','ϊ'=>'i','ΐ'=>'i','Ι'=>'i','Ί'=>'i','Ϊ'=>'i',
+            'κ'=>'k','Κ'=>'k','λ'=>'l','Λ'=>'l','μ'=>'m','Μ'=>'m','ν'=>'n','Ν'=>'n','ξ'=>'ks','Ξ'=>'ks',
+            'ο'=>'o','ό'=>'o','Ο'=>'o','Ό'=>'o','π'=>'p','Π'=>'p','ρ'=>'r','Ρ'=>'r','σ'=>'s','ς'=>'s','Σ'=>'s',
+            'τ'=>'t','Τ'=>'t','υ'=>'y','ύ'=>'y','ϋ'=>'y','ΰ'=>'y','Υ'=>'y','Ύ'=>'y','Ϋ'=>'y',
+            'φ'=>'f','Φ'=>'f','χ'=>'ch','Χ'=>'ch','ψ'=>'ps','Ψ'=>'ps','ω'=>'o','ώ'=>'o','Ω'=>'o','Ώ'=>'o'
+        );
+        
+        // Apply character rules based on setting
+        switch($allowed_chars) {
+            case 'letters_numbers_underscores_hyphens_greeklish':
+                // Convert Greek to Greeklish
+                $slug = strtr($slug, $greek_map);
+                $slug = preg_replace('/[^a-z0-9_\-]/', '-', $slug);
+                break;
+            case 'letters_numbers_underscores_hyphens_greek':
+                // Keep Greek characters
+                $slug = preg_replace('/[^a-z0-9_\-\x{0370}-\x{03ff}\x{1f00}-\x{1fff}]/u', '-', $slug);
+                break;
+            case 'letters_numbers_hyphens':
+                $slug = preg_replace('/[^a-z0-9\-]/', '-', $slug);
+                break;
+            case 'letters_numbers':
+                $slug = preg_replace('/[^a-z0-9]/', '-', $slug);
+                break;
+            case 'letters_numbers_underscores_hyphens':
+            default:
+                $slug = preg_replace('/[^a-z0-9_\-]/', '-', $slug);
+                break;
+        }
+        
+        // Clean up multiple hyphens
+        $slug = preg_replace('/-+/', '-', $slug);
+        $slug = trim($slug, '-');
+        
+        // Ensure uniqueness
+        $original_slug = $slug;
+        $counter = 1;
+        while (term_exists($slug, $taxonomy) && get_term_by('slug', $slug, $taxonomy)->term_id !== $term_id) {
+            $slug = $original_slug . '-' . $counter;
+            $counter++;
+        }
+        
+        return $slug;
     }
 }

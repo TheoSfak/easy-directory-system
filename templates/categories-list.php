@@ -169,6 +169,11 @@ $available_taxonomies = get_taxonomies(array('public' => true), 'objects');
                 <span class="dashicons dashicons-yes" style="margin-top: 4px;"></span>
                 <?php _e('Enable All Categories', 'easy-directory-system'); ?>
             </button>
+            
+            <button type="button" class="button button-secondary button-large eds-regenerate-urls" style="height: 36px; margin-left: 10px;">
+                <span class="dashicons dashicons-update" style="margin-top: 4px;"></span>
+                <?php _e('Regenerate All URLs', 'easy-directory-system'); ?>
+            </button>
         </div>
         
         <!-- Categories Table -->

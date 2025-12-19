@@ -152,6 +152,51 @@
             });
         });
         
+        // Regenerate all URLs button
+        $('.eds-regenerate-urls').on('click', function() {
+            if (!confirm('Regenerate all friendly URLs based on category names? This will update all slugs according to your current URL character settings.')) {
+                return;
+            }
+            
+            const $button = $(this);
+            $button.prop('disabled', true).text('Regenerating...');
+            
+            // Get taxonomy from URL, select dropdown, or default
+            const urlParams = new URLSearchParams(window.location.search);
+            let taxonomy = urlParams.get('taxonomy');
+            
+            if (!taxonomy && $('#taxonomy-switcher').length) {
+                taxonomy = $('#taxonomy-switcher').val();
+            }
+            
+            if (!taxonomy) {
+                taxonomy = 'category';
+            }
+            
+            $.ajax({
+                url: edsAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'eds_regenerate_urls',
+                    nonce: edsAjax.nonce,
+                    taxonomy: taxonomy
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.data.message || 'All URLs have been regenerated!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (response.data.message || 'Failed to regenerate URLs'));
+                        $button.prop('disabled', false).html('<span class="dashicons dashicons-update"></span> Regenerate All URLs');
+                    }
+                },
+                error: function() {
+                    alert('Failed to regenerate URLs');
+                    $button.prop('disabled', false).html('<span class="dashicons dashicons-update"></span> Regenerate All URLs');
+                }
+            });
+        });
+        
         // Duplicate category
         $('.eds-duplicate-category').on('click', function(e) {
             e.preventDefault();
