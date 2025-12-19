@@ -47,6 +47,16 @@ Your donations help us continue developing and maintaining this plugin!
 
 == Changelog ==
 
+= 1.0.6 =
+* Added: Import/Export functionality with JSON and CSV format support
+* Added: Demo Data installer with 3 preset category structures (E-Commerce, Blog, Minimal)
+* Added: How To guide page with complete step-by-step tutorials
+* Added: Beautiful dashicons for all sidebar menu items
+* Improved: Modern UI with gradient buttons, hover effects, and smooth transitions
+* Improved: Enhanced form styling with focus states and better typography
+* Fixed: CSV export now generates proper format without HTML interference
+* Fixed: Export handling moved before page rendering for clean file output
+
 = 1.0.5 =
 * Added: Greek to Greeklish auto-conversion for friendly URLs
 * Added: Radio button interface for URL character settings

@@ -91,20 +91,52 @@ class Easy_Directory_System {
      * Plugin activation
      */
     public function activate() {
-        // Create database tables
-        EDS_Database::create_tables();
-        
-        // Set default options
-        add_option('eds_version', EDS_VERSION);
-        add_option('eds_settings', array(
-            'default_redirection' => '301',
-            'allowed_url_chars' => 'letters_numbers_underscores_hyphens',
-            'sync_on_save' => false,
-            'enable_multilingual' => true
-        ));
-        
-        // Flush rewrite rules
-        flush_rewrite_rules();
+        try {
+            // Load database class if not loaded
+            if (!class_exists('EDS_Database')) {
+                require_once EDS_PLUGIN_DIR . 'includes/class-eds-database.php';
+            }
+            
+            // Create database tables
+            EDS_Database::create_tables();
+            
+            // Set default options
+            if (!get_option('eds_version')) {
+                add_option('eds_version', EDS_VERSION);
+            }
+            
+            if (!get_option('eds_settings')) {
+                add_option('eds_settings', array(
+                    'default_redirection' => '301',
+                    'allowed_url_chars' => 'letters_numbers_underscores_hyphens',
+                    'sync_on_save' => false,
+                    'enable_multilingual' => true,
+                    'seo_enabled' => true,
+                    'auto_generate_meta' => false,
+                    'default_group_access' => array('visitor', 'guest', 'customer')
+                ));
+            }
+            
+            // Flush rewrite rules
+            flush_rewrite_rules();
+            
+            // Log success
+            error_log('Easy Directory System: Plugin activated successfully');
+            
+        } catch (Exception $e) {
+            // Log error
+            error_log('Easy Directory System activation error: ' . $e->getMessage());
+            
+            // Deactivate plugin
+            deactivate_plugins(plugin_basename(__FILE__));
+            
+            // Show error message
+            wp_die(
+                __('Easy Directory System could not be activated. Error: ', 'easy-directory-system') . $e->getMessage(),
+                __('Plugin Activation Error', 'easy-directory-system'),
+                array('back_link' => true)
+            );
+        }
     }
     
     /**

@@ -40,7 +40,7 @@ class EDS_Database {
         ) $charset_collate;";
         
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql);
+        $result1 = dbDelta($sql);
         
         // Create translations table for multilingual support
         $translations_table = $wpdb->prefix . 'eds_category_translations';
@@ -59,7 +59,21 @@ class EDS_Database {
             KEY term_id (term_id)
         ) $charset_collate;";
         
-        dbDelta($sql_translations);
+        $result2 = dbDelta($sql_translations);
+        
+        // Log table creation results
+        error_log('EDS Database: Main table creation - ' . print_r($result1, true));
+        error_log('EDS Database: Translations table creation - ' . print_r($result2, true));
+        
+        // Verify tables were created
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'");
+        $trans_exists = $wpdb->get_var("SHOW TABLES LIKE '$translations_table'");
+        
+        if (!$table_exists || !$trans_exists) {
+            throw new Exception('Failed to create database tables. Check database permissions.');
+        }
+        
+        return true;
     }
     
     /**
