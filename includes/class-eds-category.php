@@ -18,7 +18,8 @@ class EDS_Category {
             'taxonomy' => $taxonomy,
             'orderby' => 'name',
             'order' => 'ASC',
-            'hide_empty' => false
+            'hide_empty' => false,
+            'number' => 0  // Get ALL terms without limit
         );
         
         $args = wp_parse_args($args, $defaults);
