@@ -324,38 +324,61 @@ class EDS_Ajax {
      * Generate slug from text based on settings
      */
     private function generate_slug($text, $allowed_chars, $taxonomy, $term_id = 0) {
-        $slug = strtolower($text);
-        
-        // Greek to Greeklish conversion map
+        // Greek to Greeklish conversion map (handle before lowercasing)
         $greek_map = array(
-            'α'=>'a','ά'=>'a','Α'=>'a','Ά'=>'a','β'=>'b','Β'=>'b','γ'=>'g','Γ'=>'g','δ'=>'d','Δ'=>'d',
-            'ε'=>'e','έ'=>'e','Ε'=>'e','Έ'=>'e','ζ'=>'z','Ζ'=>'z','η'=>'i','ή'=>'i','Η'=>'i','Ή'=>'i',
-            'θ'=>'th','Θ'=>'th','ι'=>'i','ί'=>'i','ϊ'=>'i','ΐ'=>'i','Ι'=>'i','Ί'=>'i','Ϊ'=>'i',
-            'κ'=>'k','Κ'=>'k','λ'=>'l','Λ'=>'l','μ'=>'m','Μ'=>'m','ν'=>'n','Ν'=>'n','ξ'=>'ks','Ξ'=>'ks',
-            'ο'=>'o','ό'=>'o','Ο'=>'o','Ό'=>'o','π'=>'p','Π'=>'p','ρ'=>'r','Ρ'=>'r','σ'=>'s','ς'=>'s','Σ'=>'s',
-            'τ'=>'t','Τ'=>'t','υ'=>'y','ύ'=>'y','ϋ'=>'y','ΰ'=>'y','Υ'=>'y','Ύ'=>'y','Ϋ'=>'y',
-            'φ'=>'f','Φ'=>'f','χ'=>'ch','Χ'=>'ch','ψ'=>'ps','Ψ'=>'ps','ω'=>'o','ώ'=>'o','Ω'=>'o','Ώ'=>'o'
+            'Α'=>'A','Ά'=>'A','α'=>'a','ά'=>'a',
+            'Β'=>'B','β'=>'b',
+            'Γ'=>'G','γ'=>'g',
+            'Δ'=>'D','δ'=>'d',
+            'Ε'=>'E','Έ'=>'E','ε'=>'e','έ'=>'e',
+            'Ζ'=>'Z','ζ'=>'z',
+            'Η'=>'I','Ή'=>'I','η'=>'i','ή'=>'i',
+            'Θ'=>'Th','θ'=>'th',
+            'Ι'=>'I','Ί'=>'I','Ϊ'=>'I','ι'=>'i','ί'=>'i','ϊ'=>'i','ΐ'=>'i',
+            'Κ'=>'K','κ'=>'k',
+            'Λ'=>'L','λ'=>'l',
+            'Μ'=>'M','μ'=>'m',
+            'Ν'=>'N','ν'=>'n',
+            'Ξ'=>'Ks','ξ'=>'ks',
+            'Ο'=>'O','Ό'=>'O','ο'=>'o','ό'=>'o',
+            'Π'=>'P','π'=>'p',
+            'Ρ'=>'R','ρ'=>'r',
+            'Σ'=>'S','σ'=>'s','ς'=>'s',
+            'Τ'=>'T','τ'=>'t',
+            'Υ'=>'Y','Ύ'=>'Y','Ϋ'=>'Y','υ'=>'y','ύ'=>'y','ϋ'=>'y','ΰ'=>'y',
+            'Φ'=>'F','φ'=>'f',
+            'Χ'=>'Ch','χ'=>'ch',
+            'Ψ'=>'Ps','ψ'=>'ps',
+            'Ω'=>'O','Ώ'=>'O','ω'=>'o','ώ'=>'o'
         );
+        
+        $slug = $text;
         
         // Apply character rules based on setting
         switch($allowed_chars) {
             case 'letters_numbers_underscores_hyphens_greeklish':
-                // Convert Greek to Greeklish
+                // Convert Greek to Greeklish FIRST
                 $slug = strtr($slug, $greek_map);
+                // Then lowercase
+                $slug = function_exists('mb_strtolower') ? mb_strtolower($slug, 'UTF-8') : strtolower($slug);
                 $slug = preg_replace('/[^a-z0-9_\-]/', '-', $slug);
                 break;
             case 'letters_numbers_underscores_hyphens_greek':
-                // Keep Greek characters
+                // Keep Greek characters (lowercase first)
+                $slug = function_exists('mb_strtolower') ? mb_strtolower($slug, 'UTF-8') : strtolower($slug);
                 $slug = preg_replace('/[^a-z0-9_\-\x{0370}-\x{03ff}\x{1f00}-\x{1fff}]/u', '-', $slug);
                 break;
             case 'letters_numbers_hyphens':
+                $slug = function_exists('mb_strtolower') ? mb_strtolower($slug, 'UTF-8') : strtolower($slug);
                 $slug = preg_replace('/[^a-z0-9\-]/', '-', $slug);
                 break;
             case 'letters_numbers':
+                $slug = function_exists('mb_strtolower') ? mb_strtolower($slug, 'UTF-8') : strtolower($slug);
                 $slug = preg_replace('/[^a-z0-9]/', '-', $slug);
                 break;
             case 'letters_numbers_underscores_hyphens':
             default:
+                $slug = function_exists('mb_strtolower') ? mb_strtolower($slug, 'UTF-8') : strtolower($slug);
                 $slug = preg_replace('/[^a-z0-9_\-]/', '-', $slug);
                 break;
         }
