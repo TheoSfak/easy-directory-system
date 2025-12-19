@@ -163,11 +163,13 @@ class EDS_Ajax {
         
         $taxonomy = isset($_POST['taxonomy']) ? sanitize_text_field($_POST['taxonomy']) : 'category';
         
-        // Get all terms in the taxonomy (including all levels of hierarchy)
+        // Get ALL terms in the taxonomy without any filters
         $terms = get_terms(array(
             'taxonomy' => $taxonomy,
             'hide_empty' => false,
-            'orderby' => 'none'
+            'number' => 0,  // Get all terms, no limit
+            'orderby' => 'none',
+            'suppress_filter' => true  // Bypass filters that might limit results
         ));
         
         if (is_wp_error($terms)) {
